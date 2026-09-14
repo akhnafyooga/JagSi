@@ -1,44 +1,86 @@
-# ABAL - Jaga Lansia (JagSi)
+# JagSi (Jaga Lansia) — Senior Project Documentation
 
-**IT Senior Project**  
-Department of Electrical and Information Engineering, Faculty of Engineering, Universitas Gadjah Mada  
+## Product Goals
+To build an accessible, cloud-connected wearable health-monitoring ecosystem that provides real-time vital sign tracking, automated fall detection, emergency alerts, and AI-driven health risk summaries for elderly individuals and their primary caregivers.
 
----
-
-## Group Information
-
-**Group Name:** ABAL  
-
-**Team Members:**
-* **Rafi Busthami** (NIM: 24/532760/TK/58998) – Group Leader / Cloud Engineer (CE)
-* **Akmal Rafli Fauzan** (NIM: 24/533033/TK/59053) – UI-UX Designer / Project Manager
-* **Akhnaf Fawzan Yogatrisna** (NIM: 24/536720/TK/59561) – Software Engineer / AI Engineer
+## Potential Users and Needs
+* **Elderly Individuals:** Require simple, non-intrusive wearable hardware equipped with vital sensors and an accessible physical SOS button with zero UI learning curve.
+* **Family Caregivers:** Require a web dashboard offering live health metrics, instant push notifications for fall events, and simplified AI explanations of telemetry.
+* **Healthcare Providers:** Require organized historical health trends (heart rate, SpO2, temperature) to evaluate overall patient conditions.
 
 ---
 
-## Module 1: Product Definition & Problem Formulation
+## Functional Requirements
+| FR | Description |
+| :--- | :--- |
+| **FR 1** | The simulated ESP32 wearable must collect and stream heart rate, SpO2, and body temperature telemetry to Azure IoT Hub via MQTT every 10 seconds. |
+| **FR 2** | The cloud backend must process accelerometer/gyroscope vectors using an ML model to detect fall impacts and dispatch emergency alerts within 5 seconds. |
+| **FR 3** | The system must allow users to trigger a manual emergency SOS alert by holding the wearable's physical button for >2 seconds. |
+| **FR 4** | The web dashboard must integrate the Gemini API to analyze raw telemetry and deliver simplified health risk summaries in Bahasa Indonesia. |
 
-### 1. Product Identification
-* **Product Name:** Jaga Lansia (JagSi)
-* **Product Type:** Wearable Health-Monitoring Watch Prototype & Caregiver Companion Web Dashboard
+---
 
-### 2. Background & Problem Formulation
-* **Background:** Indonesia has a rapidly growing elderly population, reaching ~31.4 million in 2023 and projected to exceed 48 million by 2035. Many elderly individuals live alone or far from their adult children. Current healthcare infrastructure lacks continuous remote monitoring, and full-time human caregiving is financially unfeasible for most families.
-* **Problem Statement:** How can we enable real-time health monitoring for elderly individuals who live alone or far from family, so that health concerns or emergencies (such as falls) are detected and responded to quickly without requiring frequent clinic visits?
+## Entity Relationship Diagram (ERD)
 
-### 3. Proposed Solution & Key Features
-* **Proposed Solution:** JagSi is an ESP32-based wearable watch prototype equipped with vital sign sensors and fall detection. It transmits telemetry data via Wi-Fi/MQTT to Azure cloud infrastructure. Machine learning models analyze vital signs and movement patterns, triggering emergency alerts to a companion web dashboard. The system integrates a Gemini-powered Bahasa Indonesia chatbot to deliver accessible health summaries.
-* **Key Feature Specifications:**
-  * **Wearable Watch & Web Dashboard:** Non-timekeeping sensor watch paired with an accessible family caregiver web portal.
-  * **Vital Sign Monitor:** Real-time metrics for heart rate, SpO2, and body temperature.
-  * **Fall Detection System:** Accelerometer and gyroscope data processing via ML models to classify impacts and send automated SOS alerts.
-  * **AI Health-Risk Analysis:** Combines sensor metrics, medical history, and external API data to evaluate overall health risk status.
-  * **Bahasa Indonesia Health Chatbot:** Gemini-driven conversational interface translating complex telemetry into clear explanations.
+```mermaid
+erDiagram
+    USERS ||--o{ DEVICES : owns
+    DEVICES ||--o{ TELEMETRY_LOGS : generates
+    DEVICES ||--o{ ALERTS : triggers
 
-### 4. Competitor Analysis
+    USERS {
+        string user_id PK
+        string name
+        string role
+        string phone_number
+        datetime created_at
+    }
 
-| Competitor | Type & Focus | Key Strengths | Key Weaknesses | JagSi Advantage |
-| :--- | :--- | :--- | :--- | :--- |
-| **Whoop** | Direct (Fitness / Recovery) | 24/7 continuous tracking, advanced physiological recovery metrics | High subscription fee (~$30/mo); lacks fall detection, SOS, or Bahasa Indonesia support | Low-cost hardware targeting elderly health, automated fall alerts, and localized AI assistance. |
-| **Apple Watch** | Direct (Premium Smartwatch) | Advanced sensors (ECG, SpO2), built-in fall detection | High cost (Rp7M–Rp15M+); requires iPhone; complex interface for non-tech-savvy elderly | Low-cost prototype paired with a browser-accessible dashboard independent of smartphone ecosystems. |
-| **Wonlex** | Direct (Elderly GPS Watch) | Low price (Rp300k–Rp800k); standalone SOS calling and GPS | No vital sign sensors (SpO2, heart rate, temp); no ML fall detection or AI features | Integrates vital telemetry, ML-based fall detection, and dynamic Gemini AI health analytics. |
+    DEVICES {
+        string device_id PK
+        string user_id FK
+        string mac_address
+        string status
+        datetime last_active
+    }
+
+    TELEMETRY_LOGS {
+        string log_id PK
+        string device_id FK
+        int heart_rate
+        int spo2
+        float temperature
+        datetime timestamp
+    }
+
+    ALERTS {
+        string alert_id PK
+        string device_id FK
+        string alert_type
+        string status
+        datetime timestamp
+    }
+```
+
+---
+
+## Gantt-Chart Sprint Based
+```mermaid
+gantt
+    title JagSi Development Timeline (6 Sprints / 12 Sessions)
+    dateFormat  YYYY-MM-DD
+    axisFormat  Sprint %W
+
+    section Sprint 1
+    SDLC Planning & Architecture          :done, s1, 2026-09-01, 2026-09-14
+    section Sprint 2
+    Wokwi Hardware Sim & Figma UI         :active, s2, 2026-09-15, 2026-09-28
+    section Sprint 3
+    Azure IoT Hub & MQTT Ingestion        :s3, 2026-09-29, 2026-10-12
+    section Sprint 4
+    ML Model & Gemini AI Backend          :s4, 2026-10-13, 2026-10-26
+    section Sprint 5
+    Caregiver Web App Development         :s5, 2026-10-27, 2026-11-09
+    section Sprint 6
+    E2E Testing, CI/CD & Final Docs       :s6, 2026-11-10, 2026-11-23
+```
