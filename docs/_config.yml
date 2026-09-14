@@ -1,3 +1,4 @@
 theme: jekyll-theme-primer
 title: "JagSi - Jaga Lansia"
 description: "AI-Powered Wearable Health-Monitoring System for the Elderly"
+include: ["assets"]
