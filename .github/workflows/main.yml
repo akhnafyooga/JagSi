@@ -16,14 +16,18 @@ jobs:
 
       - name: Setup Node.js Environment
         uses: actions/setup-node@v3
+        if: ${{ hashFiles('package.json') != '' }}
         with:
           node-version: '18'
 
       - name: Install Dependencies
+        if: ${{ hashFiles('package.json') != '' }}
         run: npm install
 
       - name: Run Linter & Syntax Check
+        if: ${{ hashFiles('package.json') != '' }}
         run: npm run lint --if-present
 
       - name: Run Test Suites
+        if: ${{ hashFiles('package.json') != '' }}
         run: npm test --if-present
