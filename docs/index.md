@@ -95,4 +95,4 @@ Below is the initial low-fidelity component breakdown for the JagSi Caregiver We
 * **AI Health Digest:** Section summarizing daily vital trends via Gemini API (Bahasa Indonesia).
 * **AI Chat Assistant:** Interactive prompt area for caregiver health queries.
 
-![JagSi Lo-Fi Wireframe](assets/jagsi_dashboard.svg)
+![JagSi Lo-Fi Wireframe](D:\JagSi\assets\jagsi_dashboard.svg)
