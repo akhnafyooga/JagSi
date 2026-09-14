@@ -84,3 +84,15 @@ gantt
     section Sprint 6
     E2E Testing, CI/CD & Final Docs       :s6, 2026-11-10, 2026-11-23
 ```
+
+## UI/UX Design & Low-Fidelity Wireframes
+
+Below is the initial low-fidelity component breakdown for the JagSi Caregiver Web App:
+
+* **Header:** Navigation, real-time alerts, user profile.
+* **Alert Banner:** Prominent notification strip for critical fall events (UC-02 / UC-03).
+* **Telemetry Grid:** Live monitoring cards for Heart Rate, SpO2, Body Temp, and Battery status.
+* **AI Health Digest:** Section summarizing daily vital trends via Gemini API (Bahasa Indonesia).
+* **AI Chat Assistant:** Interactive prompt area for caregiver health queries.
+
+![JagSi Lo-Fi Wireframe](assets/jagsi_dashboard.svg)
