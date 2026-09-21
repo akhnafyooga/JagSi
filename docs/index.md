@@ -1,21 +1,28 @@
 # JagSi (Jaga Lansia) — Senior Project Documentation
 
+**Live Documentation Portal**: [https://akhnafyooga.github.io/JagSi/](https://akhnafyooga.github.io/JagSi/)
+
+---
+
 ## Product Goals
 To build an accessible, cloud-connected wearable health-monitoring ecosystem that provides real-time vital sign tracking, automated fall detection, emergency alerts, and AI-driven health risk summaries for elderly individuals and their primary caregivers.
 
+---
+
 ## Potential Users and Needs
-* **Elderly Individuals:** Require simple, non-intrusive wearable hardware equipped with vital sensors and an accessible physical SOS button with zero UI learning curve.
-* **Family Caregivers:** Require a web dashboard offering live health metrics, instant push notifications for fall events, and simplified AI explanations of telemetry.
-* **Healthcare Providers:** Require organized historical health trends (heart rate, SpO2, temperature) to evaluate overall patient conditions.
+* **Elderly Individuals**: Require simple, non-intrusive wearable hardware equipped with vital sensors and an accessible physical SOS button with zero UI learning curve.
+* **Family Caregivers**: Require a web dashboard offering live health metrics, instant push notifications for fall events, and simplified AI explanations of telemetry.
+* **Healthcare Providers**: Require organized historical health trends (heart rate, SpO2, temperature) to evaluate overall patient conditions.
 
 ---
 
 ## Functional Requirements
+
 | FR | Description |
 | :--- | :--- |
 | **FR 1** | The simulated ESP32 wearable must collect and stream heart rate, SpO2, and body temperature telemetry to Azure IoT Hub via MQTT every 10 seconds. |
 | **FR 2** | The cloud backend must process accelerometer/gyroscope vectors using an ML model to detect fall impacts and dispatch emergency alerts within 5 seconds. |
-| **FR 3** | The system must allow users to trigger a manual emergency SOS alert by holding the wearable's physical button for >2 seconds. |
+| **FR 3** | The system must allow users to trigger a manual emergency SOS alert by holding the wearable’s physical button for >2 seconds. |
 | **FR 4** | The web dashboard must integrate the Gemini API to analyze raw telemetry and deliver simplified health risk summaries in Bahasa Indonesia. |
 
 ---
@@ -61,38 +68,36 @@ erDiagram
         datetime timestamp
     }
 ```
-
----
-
-## Gantt-Chart Sprint Based
-```mermaid
+## Gantt-Chart or Sprint Status
+```
 gantt
-    title JagSi Development Timeline (6 Sprints / 12 Sessions)
+    title JagSi 3-Sprint SDLC Timeline
     dateFormat  YYYY-MM-DD
-    axisFormat  Sprint %W
+    axisFormat  %b %d
 
-    section Sprint 1
-    SDLC Planning & Architecture          :done, s1, 2026-09-01, 2026-09-14
-    section Sprint 2
-    Wokwi Hardware Sim & Figma UI         :active, s2, 2026-09-15, 2026-09-28
-    section Sprint 3
-    Azure IoT Hub & MQTT Ingestion        :s3, 2026-09-29, 2026-10-12
-    section Sprint 4
-    ML Model & Gemini AI Backend          :s4, 2026-10-13, 2026-10-26
-    section Sprint 5
-    Caregiver Web App Development         :s5, 2026-10-27, 2026-11-09
-    section Sprint 6
-    E2E Testing, CI/CD & Final Docs       :s6, 2026-11-10, 2026-11-23
+    section Sprint 1: Hardware & UI Setup
+    README Setup & Product Descriptions (#14)  :done, task14, 2026-09-19, 2026-10-02
+    Design UI/UX Wireframes & Component Kit (#11) :active, task11, 2026-09-19, 2026-10-02
+    Interface ESP32 on Wokwi (#5)              :task5, 2026-09-19, 2026-10-02
+    Program MQTT Pub/Sub Pipeline (#6)         :task6, 2026-09-19, 2026-10-02
+    Assemble Casing & Wearable Prototype (#7)  :task7, 2026-09-19, 2026-10-02
+
+    section Sprint 2: Cloud Infrastructure & AI
+    Deploy Azure IoT Hub & Event Grid (#8)     :task8, 2026-10-03, 2026-10
 ```
 
-## UI/UX Design & Low-Fidelity Wireframes
-
+## UI/UX Design & Low-Fidelity Wireframe
+UI/UX Design & Low-Fidelity Wireframes
 Below is the initial low-fidelity component breakdown for the JagSi Caregiver Web App:
 
-* **Header:** Navigation, real-time alerts, user profile.
-* **Alert Banner:** Prominent notification strip for critical fall events (UC-02 / UC-03).
-* **Telemetry Grid:** Live monitoring cards for Heart Rate, SpO2, Body Temp, and Battery status.
-* **AI Health Digest:** Section summarizing daily vital trends via Gemini API (Bahasa Indonesia).
-* **AI Chat Assistant:** Interactive prompt area for caregiver health queries.
+![JagSi dashboard](assets/jagsi_dashboard.svg)
 
-![JagSi Lo-Fi Wireframe]({{ "/assets/jagsi_dashboard.svg" | relative_url }})
+Header: Navigation bar, real-time status/alerts indicator, user profile.
+
+Alert Banner: Prominent notification strip for critical fall events or manual emergency SOS triggers.
+
+Telemetry Grid: Live monitoring cards for Heart Rate, SpO2, Body Temperature, and Battery status.
+
+AI Health Digest: Section summarizing daily vital trends via Gemini API in Bahasa Indonesia.
+
+AI Chat Assistant: Interactive prompt area for caregiver health queries and AI-assisted updates.
