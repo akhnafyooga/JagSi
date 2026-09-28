@@ -1,0 +1,27 @@
+# ============================================================
+# Cline (AI coding agent) — keep local state & config out of git
+# ============================================================
+
+# Cline workspace state (task history, MCP snapshots, plans, etc.)
+.cline/
+
+# Cline project rules
+.clinerules
+.clinerules/
+
+# Cline ignore file (patterns Cline uses to skip files when scanning)
+.clineignore
+
+# Project-level MCP configuration (Cline reads these)
+.mcp.json
+.vscode/mcp.json
+cline_mcp_settings.json
+
+# ============================================================
+# Related AI assistant tooling (same category)
+# ============================================================
+.claude/
+.claude.json
+.cursor/
+.cursorrules
+.windsurf/
