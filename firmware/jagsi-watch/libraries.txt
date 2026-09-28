@@ -1,0 +1,7 @@
+# Wokwi Library Manager
+PubSubClient
+ArduinoJson
+Adafruit MPU6050
+Adafruit Unified Sensor
+OneWire
+DallasTemperature
