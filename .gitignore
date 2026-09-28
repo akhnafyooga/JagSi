@@ -1,0 +1,25 @@
+# --- AI assistant files (Claude, GitHub Copilot) ---
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.claude.json
+.mcp.json
+.copilot/
+.github/copilot-instructions.md
+.github/instructions/
+.github/prompts/
+.github/chatmodes/
+
+# --- Python ---
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# --- Tool output ---
+tools/logs/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
