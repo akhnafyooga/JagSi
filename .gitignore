@@ -1,0 +1,41 @@
+# ============================================================
+# Cline (AI coding agent) — keep local state & config out of git
+# ============================================================
+
+# Cline workspace state (task history, MCP snapshots, plans, etc.)
+.cline/
+
+# Cline project rules
+.clinerules
+.clinerules/
+
+# Cline ignore file (patterns Cline uses to skip files when scanning)
+.clineignore
+
+# Project-level MCP configuration (Cline reads these)
+.mcp.json
+.vscode/mcp.json
+cline_mcp_settings.json
+
+# ============================================================
+# Related AI assistant tooling (same category)
+# ============================================================
+.claude/
+.claude.json
+.cursor/
+.cursorrules
+.windsurf/
+
+# Week 6: local SQLite database and env files
+backend/data/
+frontend/.env.local
+
+# Python bytecode (was not ignored; __pycache__ would otherwise be committed)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Next.js / TypeScript build output
+frontend/tsconfig.tsbuildinfo
+frontend/.next/
+frontend/node_modules/
