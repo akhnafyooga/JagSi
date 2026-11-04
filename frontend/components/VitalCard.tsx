@@ -31,9 +31,21 @@ export function VitalCard({ vital }: { vital: Vital }) {
         </span>
       </div>
       <div className="mt-3">
-        <span className="text-xs font-medium text-on-surface-variant">{vital.label}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-medium text-on-surface-variant">{vital.label}</span>
+          {vital.simulated ? (
+            <span
+              title="Nilai berasal dari simulasi Wokwi, bukan sensor sebenarnya"
+              className="rounded border border-on-surface-variant/30 px-1 text-[9px] font-semibold uppercase tracking-wider text-on-surface-variant"
+            >
+              Sim
+            </span>
+          ) : null}
+        </div>
         <div className="mt-0.5 flex items-baseline gap-1">
-          <span className="text-2xl font-bold tracking-tight text-on-surface">{vital.value}</span>
+          <span className="text-2xl font-bold tracking-tight text-on-surface">
+            {vital.value === null ? '--' : vital.value}
+          </span>
           <span className="text-sm font-medium text-on-surface-variant">{vital.unit}</span>
         </div>
       </div>

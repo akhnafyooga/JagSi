@@ -1,10 +1,9 @@
 import { TopAppBar } from '@/components/TopAppBar';
-import { StatusBanner } from '@/components/StatusBanner';
-import { VitalCard } from '@/components/VitalCard';
+import { LiveVitals } from '@/components/LiveVitals';
 import { FallStatusCard } from '@/components/FallStatusCard';
 import { AiHealthSummary } from '@/components/AiHealthSummary';
 import { ChatAssistant } from '@/components/ChatAssistant';
-import { aiSummary, elder, fallStatus, vitals } from '@/lib/mock-data';
+import { aiSummary, elder, fallStatus } from '@/lib/mock-data';
 
 export default function HomePage() {
   return (
@@ -12,23 +11,13 @@ export default function HomePage() {
       <TopAppBar title="JagSi (Jaga Lansia)" subtitle={elder.name} online />
 
       <main className="space-y-4 px-4 pt-3">
-        <StatusBanner
-          tone="normal"
-          title="Semua Tanda Vital Normal"
-          badge="Terpantau"
-          message="Data terakhir diperbarui 5 menit lalu"
-        />
-
-        <section className="space-y-2">
-          <h2 className="text-base font-semibold tracking-tight text-on-surface">
-            Live Vital Signs
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {vitals.map((vital) => (
-              <VitalCard key={vital.id} vital={vital} />
-            ))}
-          </div>
-        </section>
+        {/*
+          Vital signs and the status banner are live from the backend as of
+          Week 6. The fall status card, AI summary and chat below are still the
+          mock data from issue #12: the fall card needs the alert stream wired
+          in, and the AI summary needs the Gemini service (Sprint 4).
+        */}
+        <LiveVitals />
 
         <FallStatusCard
           status={fallStatus.status}

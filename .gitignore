@@ -25,3 +25,17 @@ cline_mcp_settings.json
 .cursor/
 .cursorrules
 .windsurf/
+
+# Week 6: local SQLite database and env files
+backend/data/
+frontend/.env.local
+
+# Python bytecode (was not ignored; __pycache__ would otherwise be committed)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Next.js / TypeScript build output
+frontend/tsconfig.tsbuildinfo
+frontend/.next/
+frontend/node_modules/
