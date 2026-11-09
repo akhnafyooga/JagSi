@@ -4,9 +4,14 @@ Issue: [#6 Program MQTT pub/sub data pipeline](https://github.com/akhnafyooga/Ja
 
 ```
 firmware/jagsi-watch/
-├── sketch.ino       # ESP32 firmware (Arduino C++)
-├── diagram.json     # Wokwi circuit
-└── libraries.txt    # Wokwi libraries
+├── sketch.ino               # ESP32 firmware (Arduino C++)
+├── motion_window.h          # ring buffer for the fall model's 3 s windows
+├── azure_method.h           # parses IoT Hub direct-method topics (Week 7)
+├── azure_roots.h            # public root certificates for IoT Hub TLS (Week 7)
+├── azure_config.example.h   # template; the real azure_config.h is never committed
+├── diagram.json             # Wokwi circuit
+└── libraries.txt            # Wokwi libraries
+firmware/test/                  # host tests + check_sketch.sh (type-checks both transports)
 docs/mqtt-contract.md           # topics + JSON payloads (read this first)
 docs/test-results-issue-6.md    # what was tested and the results
 tools/                          # Python tools for the "cloud side"
@@ -62,8 +67,25 @@ sudo apt install mosquitto      # only needed for the end-to-end test
 python -m pytest tests
 ```
 
+## Azure IoT Hub (Week 7, issue #8)
+
+Without `azure_config.h` the sketch is the Week 6 firmware on the public broker.
+With it, the watch connects to Azure IoT Hub over TLS (port 8883) with an X.509
+device certificate, and receives commands as direct methods. Generate the file
+with `infra/azure/deploy.sh hub` and follow `docs/azure-setup.md`.
+
+> `azure_config.h` contains the device's private key. It is in `.gitignore`; keep
+> any Wokwi project that contains it **private**.
+
+Check the sketch still compiles in both modes without a board:
+
+```bash
+git clone --depth 1 --branch v7.4.2 https://github.com/bblanchon/ArduinoJson /tmp/ArduinoJson
+firmware/test/check_sketch.sh /tmp/ArduinoJson/src
+```
+
 ## Next steps
 
-- Sprint 2 (#8): change the broker to Azure IoT Hub (TLS + device authentication).
+- ~~Sprint 2 (#8): change the broker to Azure IoT Hub (TLS + device authentication).~~ Done in Week 7, see above.
 - #5 / #7: replace the heart rate + SpO₂ potentiometers with the real MAX30102 on the physical prototype.
 - #9: replace the 2.5 g fall rule with the ML model.

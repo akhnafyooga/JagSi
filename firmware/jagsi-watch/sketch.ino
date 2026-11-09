@@ -16,6 +16,14 @@
  *     enough: it carries one sample per message, the model needs all 30.
  *   - Subscribes to a command topic (ping, set_interval, set_motion, ack_alert).
  *
+ * Two transports, chosen at compile time (issue #8):
+ *   - default: the public HiveMQ broker, plain MQTT (Week 6, dummy data only)
+ *   - Azure IoT Hub: add azure_config.h next to this file (see
+ *     azure_config.example.h or run infra/azure/deploy.sh). The watch then uses
+ *     MQTT over TLS on port 8883, proves its identity with an X.509 device
+ *     certificate, sends on devices/<id>/messages/events/, and receives
+ *     commands as IoT Hub direct methods. Payloads are identical in both modes.
+ *
  * Topic and payload rules: see docs/mqtt-contract.md
  * Sensor pins and what is real vs simulated: see docs/hardware-bom.md
  *
@@ -36,18 +44,40 @@
 
 #include "motion_window.h"
 
+#if __has_include("azure_config.h")
+#include "azure_config.h"
+#endif
+#ifndef JAGSI_AZURE
+#define JAGSI_AZURE 0
+#endif
+
+#if JAGSI_AZURE
+#include <WiFiClientSecure.h>
+#include "azure_roots.h"
+#include "azure_method.h"
+#endif
+
 // ------------------------------------------------------------------
 // Settings (change here)
 // ------------------------------------------------------------------
-#define FW_VERSION      "0.1.0"
+#define FW_VERSION      "0.2.0"
 #define DEVICE_ID       "jagsi-watch-01"      // = WEARABLE_DEVICE.device_id
 
 #define WIFI_SSID       "Wokwi-GUEST"         // Wokwi's virtual Wi-Fi
 #define WIFI_PASSWORD   ""
 #define WIFI_CHANNEL    6                     // Wokwi-GUEST is on channel 6 (faster connect)
 
+#if JAGSI_AZURE
+#define MQTT_HOST       AZURE_IOTHUB_HOST
+#define MQTT_PORT       8883                  // MQTT over TLS; IoT Hub has no plain-text port
+// IoT Hub reads these from the topic's property bag. Content type + encoding
+// make Event Grid hand the backend real JSON instead of base64.
+#define AZURE_EVENTS_FMT "devices/%s/messages/events/$.ct=application%%2Fjson&$.ce=utf-8&type=%s"
+#define AZURE_METHODS_SUB "$iothub/methods/POST/#"
+#else
 #define MQTT_HOST       "broker.hivemq.com"   // public test broker (dummy data only!)
 #define MQTT_PORT       1883
+#endif
 #define TOPIC_BASE      "jagsi/abal/v1/"
 
 // Pins
@@ -94,18 +124,26 @@
 // ------------------------------------------------------------------
 // Global objects and state
 // ------------------------------------------------------------------
-WiFiClient        wifiClient;
-PubSubClient      mqtt(wifiClient);
+#if JAGSI_AZURE
+WiFiClientSecure  netClient;
+#else
+WiFiClient        netClient;
+#endif
+PubSubClient      mqtt(netClient);
 Adafruit_MPU6050  mpu;
 OneWire           oneWire(PIN_ONEWIRE);
 DallasTemperature tempSensor(&oneWire);
 
-char topicTelemetry[64];
-char topicEvent[64];
-char topicStatus[64];
-char topicCmd[64];
-char topicMotion[64];
+// IoT Hub topics carry a property bag, so they are longer than the Week 6 ones.
+char topicTelemetry[128];
+char topicEvent[128];
+char topicStatus[128];
+char topicCmd[128];
+char topicMotion[128];
 char clientId[40];
+#if JAGSI_AZURE
+char mqttUsername[128];
+#endif
 char bootId[9];            // random per boot, makes event_id unique
 
 bool mpuOk = false;
@@ -468,22 +506,18 @@ void publishStatus() {
   doc["interval_ms"] = telemetryIntervalMs;
   doc["motion_enabled"] = motionEnabled;
   doc["sample_rate_hz"] = MOTION_SAMPLE_RATE_HZ;
-  publishJson(topicStatus, doc, true);       // retained
+  // Retained on the broker; IoT Hub has no retained messages, the backend
+  // gets online/offline from Event Grid's DeviceConnected events instead.
+  publishJson(topicStatus, doc, !JAGSI_AZURE);
 }
 
 // ------------------------------------------------------------------
 // Commands from the cloud (subscribe)
 // ------------------------------------------------------------------
-void onMqttMessage(char *topic, byte *payload, unsigned int length) {
-  Serial.printf("[MQTT] <- %s: %.*s\n", topic, (int)length, (const char *)payload);
-  if (strcmp(topic, topicCmd) != 0) return;
-
-  JsonDocument doc;
-  DeserializationError err = deserializeJson(doc, payload, length);
-  if (err) {
-    Serial.printf("[CMD] bad JSON: %s\n", err.c_str());
-    return;
-  }
+// Runs one command and returns an HTTP-style status: 200 done, 400 bad
+// arguments, 404 unknown command. On the broker the status is only logged; on
+// IoT Hub it is the direct method's answer, so the backend knows the result.
+int handleCommand(JsonDocument &doc) {
   const char *cmd = doc["cmd"] | "";
 
   if (strcmp(cmd, "ping") == 0) {
@@ -496,6 +530,7 @@ void onMqttMessage(char *topic, byte *payload, unsigned int length) {
       publishStatus();
     } else {
       Serial.printf("[CMD] interval %ld ms out of range\n", ms);
+      return 400;
     }
   } else if (strcmp(cmd, "set_motion") == 0) {
     // Lets the backend stop the 10 Hz window stream when the classifier is not
@@ -505,6 +540,7 @@ void onMqttMessage(char *topic, byte *payload, unsigned int length) {
     publishStatus();
   } else if (strcmp(cmd, "ack_alert") == 0) {
     const char *id = doc["event_id"] | "";
+    if (!id[0]) return 400;
     for (int i = 0; i < MAX_PENDING_ALERTS; i++) {
       if (pending[i].active && strcmp(pending[i].eventId, id) == 0) {
         pending[i].active = false;
@@ -513,7 +549,64 @@ void onMqttMessage(char *topic, byte *payload, unsigned int length) {
     }
   } else {
     Serial.printf("[CMD] unknown command '%s'\n", cmd);
+    return 404;
   }
+  return 200;
+}
+
+#if JAGSI_AZURE
+// $iothub/methods/POST/<method>/?$rid=<id>  ->  method name + request id.
+// The payload is the command's arguments; "cmd" is rebuilt from the method
+// name so handleCommand() sees exactly what the broker used to deliver.
+void onDirectMethod(const char *topic, byte *payload, unsigned int length) {
+  char method[32];
+  const char *rid = nullptr;
+  if (!parseMethodTopic(topic, method, sizeof(method), &rid)) {
+    Serial.printf("[CMD] malformed method topic %s\n", topic);
+    return;
+  }
+
+  JsonDocument doc;
+  int status = 200;
+  if (length > 0) {
+    DeserializationError err = deserializeJson(doc, payload, length);
+    if (err || !(doc.is<JsonObject>() || doc.isNull())) {
+      Serial.printf("[CMD] bad method payload: %s\n", err ? err.c_str() : "not an object");
+      status = 400;
+    }
+  }
+  if (status == 200) {
+    if (doc.isNull()) doc.to<JsonObject>();
+    doc["cmd"] = method;
+    status = handleCommand(doc);
+  }
+
+  char resTopic[64];
+  snprintf(resTopic, sizeof(resTopic), "$iothub/methods/res/%d/?$rid=%s", status, rid);
+  const char *body = status == 200 ? "{\"ok\":true}" : "{\"ok\":false}";
+  mqtt.publish(resTopic, body);
+  Serial.printf("[CMD] direct method %s -> %d\n", method, status);
+}
+#endif
+
+void onMqttMessage(char *topic, byte *payload, unsigned int length) {
+  Serial.printf("[MQTT] <- %s: %.*s\n", topic, (int)length, (const char *)payload);
+#if JAGSI_AZURE
+  if (strncmp(topic, AZURE_METHODS_PREFIX, strlen(AZURE_METHODS_PREFIX)) == 0) {
+    onDirectMethod(topic, payload, length);
+  }
+  return;
+#else
+  if (strcmp(topic, topicCmd) != 0) return;
+
+  JsonDocument doc;
+  DeserializationError err = deserializeJson(doc, payload, length);
+  if (err) {
+    Serial.printf("[CMD] bad JSON: %s\n", err.c_str());
+    return;
+  }
+  handleCommand(doc);
+#endif
 }
 
 // ------------------------------------------------------------------
@@ -552,10 +645,28 @@ void maintainMqtt() {
 
   char will[64];
   snprintf(will, sizeof(will), "{\"device_id\":\"%s\",\"state\":\"offline\"}", DEVICE_ID);
+#if JAGSI_AZURE
+  // The server certificate check needs the real date. Until NTP has answered
+  // the clock says 1970 and every certificate looks "not yet valid".
+  if (time(nullptr) < 1700000000) {
+    Serial.println(F("[MQTT] waiting for NTP time before TLS..."));
+    return;
+  }
+  Serial.printf("[MQTT] connecting to %s:%d (TLS, X.509) as %s...\n", MQTT_HOST, MQTT_PORT, clientId);
+  // X.509 auth: no password. IoT Hub reads the identity from the client
+  // certificate and checks its thumbprint against the registered device.
+  bool ok = mqtt.connect(clientId, mqttUsername, nullptr, topicStatus, 1, false, will);
+#else
   Serial.printf("[MQTT] connecting to %s:%d as %s...\n", MQTT_HOST, MQTT_PORT, clientId);
-  if (mqtt.connect(clientId, topicStatus, 1, true, will)) {
+  bool ok = mqtt.connect(clientId, topicStatus, 1, true, will);
+#endif
+  if (ok) {
     Serial.println(F("[MQTT] connected"));
+#if JAGSI_AZURE
+    mqtt.subscribe(AZURE_METHODS_SUB, 0);     // IoT Hub delivers methods at QoS 0
+#else
     mqtt.subscribe(topicCmd, 1);
+#endif
     publishStatus();
   } else {
     Serial.printf("[MQTT] failed, state=%d (retry in %d s)\n", mqtt.state(), MQTT_RETRY_MS / 1000);
@@ -567,14 +678,30 @@ void setup() {
   Serial.begin(115200);
   delay(200);
   Serial.println(F("\n=== JagSi watch firmware " FW_VERSION " ==="));
+  Serial.println(JAGSI_AZURE ? F("Transport: Azure IoT Hub (TLS + X.509)")
+                             : F("Transport: public broker (dummy data only)"));
 
   snprintf(bootId, sizeof(bootId), "%08lx", (unsigned long)esp_random());
+#if JAGSI_AZURE
+  // IoT Hub requires the MQTT client id to be exactly the device id.
+  snprintf(clientId, sizeof(clientId), "%s", DEVICE_ID);
+  snprintf(mqttUsername, sizeof(mqttUsername), "%s/%s/?api-version=2021-04-12", MQTT_HOST, DEVICE_ID);
+  snprintf(topicTelemetry, sizeof(topicTelemetry), AZURE_EVENTS_FMT, DEVICE_ID, "telemetry");
+  snprintf(topicEvent, sizeof(topicEvent), AZURE_EVENTS_FMT, DEVICE_ID, "event");
+  snprintf(topicStatus, sizeof(topicStatus), AZURE_EVENTS_FMT, DEVICE_ID, "status");
+  snprintf(topicMotion, sizeof(topicMotion), AZURE_EVENTS_FMT, DEVICE_ID, "motion");
+  topicCmd[0] = '\0';                         // commands arrive as direct methods
+  netClient.setCACert(AZURE_ROOT_CA);
+  netClient.setCertificate(AZURE_DEVICE_CERT);
+  netClient.setPrivateKey(AZURE_DEVICE_KEY);
+#else
   snprintf(clientId, sizeof(clientId), "%s-%s", DEVICE_ID, bootId);   // unique per run
   snprintf(topicTelemetry, sizeof(topicTelemetry), TOPIC_BASE "%s/telemetry", DEVICE_ID);
   snprintf(topicEvent, sizeof(topicEvent), TOPIC_BASE "%s/event", DEVICE_ID);
   snprintf(topicStatus, sizeof(topicStatus), TOPIC_BASE "%s/status", DEVICE_ID);
   snprintf(topicCmd, sizeof(topicCmd), TOPIC_BASE "%s/cmd", DEVICE_ID);
   snprintf(topicMotion, sizeof(topicMotion), TOPIC_BASE "%s/motion", DEVICE_ID);
+#endif
 
   setupSensors();
   readSimulatedVitals();
@@ -586,6 +713,9 @@ void setup() {
   mqtt.setCallback(onMqttMessage);
   mqtt.setBufferSize(2048);     // a 30-sample motion window is ~1.2 kB
   mqtt.setKeepAlive(15);        // broker sends the "offline" will after ~22 s of silence
+#if JAGSI_AZURE
+  mqtt.setSocketTimeout(10);    // a TLS handshake on the ESP32 can take a few seconds
+#endif
 }
 
 void loop() {

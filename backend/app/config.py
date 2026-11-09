@@ -55,6 +55,34 @@ class Settings:
     # three overlapping windows does not alert three times.
     ml_alert_cooldown_seconds: int = int(os.getenv("JAGSI_ML_COOLDOWN_S", "15"))
 
+    # Where device messages come from (issue #8):
+    #   mqtt  - subscribe to the broker above (Week 6 behaviour, the default)
+    #   azure - Azure IoT Hub: messages arrive at POST /api/ingest/eventgrid and
+    #           commands go out as IoT Hub direct methods. No MQTT connection.
+    ingest_mode: str = os.getenv("JAGSI_INGEST", "mqtt").strip().lower()
+    # e.g. jagsi-hub.azure-devices.net
+    azure_iothub_hostname: str = os.getenv("JAGSI_IOTHUB_HOSTNAME", "")
+    # A policy with ServiceConnect only. Not iothubowner: the backend has no
+    # reason to be able to create or delete devices.
+    azure_service_policy: str = os.getenv("JAGSI_IOTHUB_POLICY", "service")
+    azure_service_key: str = os.getenv("JAGSI_IOTHUB_POLICY_KEY", "")
+    # Shared secret Event Grid must send as ?key=..., so nobody else can post
+    # fake telemetry to the public webhook. Required in azure mode.
+    eventgrid_key: str = os.getenv("JAGSI_EVENTGRID_KEY", "")
+
+    # Gemini health summaries (issue #10). Without a key the API falls back to a
+    # rule-based summary so the dashboard still works offline and in tests.
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", "") or os.getenv("JAGSI_GEMINI_API_KEY", "")
+    gemini_model: str = os.getenv("JAGSI_GEMINI_MODEL", "gemini-2.5-flash")
+    gemini_timeout_s: float = float(os.getenv("JAGSI_GEMINI_TIMEOUT_S", "20"))
+    summary_cache_seconds: int = int(os.getenv("JAGSI_SUMMARY_CACHE_S", "60"))
+    elder_name: str = os.getenv("JAGSI_ELDER_NAME", "Ibu Sari")
+
+    # Labelled motion recordings for re-tuning the fall threshold (issue #9).
+    recordings_dir: str = os.getenv(
+        "JAGSI_RECORDINGS_DIR", str(BACKEND_DIR / "data" / "recordings")
+    )
+
     cors_origins: list[str] = field(
         default_factory=lambda: [
             o.strip()
@@ -64,6 +92,10 @@ class Settings:
             if o.strip()
         ]
     )
+
+    @property
+    def azure(self) -> bool:
+        return self.ingest_mode == "azure"
 
     def topic(self, suffix: str, device_id: str | None = None) -> str:
         return f"{self.topic_base}{device_id or self.device_id}/{suffix}"

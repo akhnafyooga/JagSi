@@ -12,6 +12,10 @@ Flow per topic:
     event     -> store alert (source=device_rule) -> broadcast -> send ack_alert
     status    -> upsert wearable_device
 
+Week 7 (issue #8): the same handlers also serve Azure IoT Hub. In that mode no
+MQTT connection is opened; ``POST /api/ingest/eventgrid`` feeds each message to
+``dispatch()`` and commands go out as IoT Hub direct methods.
+
 Threading: paho runs its network loop on its own thread, so every callback here
 runs off the event loop. Database writes are synchronous and lock-guarded in
 ``Store``; anything that must reach the event loop goes through
@@ -30,6 +34,7 @@ from typing import Any, Callable, Dict, List, Optional
 import paho.mqtt.client as mqtt
 
 from .config import Settings
+from .recorder import MotionRecorder
 from .store import Store, utcnow
 
 log = logging.getLogger("jagsi.bridge")
@@ -98,17 +103,25 @@ class Bridge:
         settings: Settings,
         store: Store,
         on_event: Optional[Callable[[Dict[str, Any]], None]] = None,
+        command_sender: Any = None,
+        recorder: Optional[MotionRecorder] = None,
     ) -> None:
         self.settings = settings
         self.store = store
         self._on_event = on_event
+        # Set in azure mode: an azure_iot.DirectMethodSender. None means commands
+        # are published on the MQTT cmd topic as before.
+        self.command_sender = command_sender
+        self.recorder = recorder
         self._loop: Optional[AbstractEventLoop] = None
         self._classifier = None
         self._lock = threading.Lock()
         self._last_ml_alert_at: Dict[str, datetime] = {}
 
         self.stats = {
+            "transport": "azure-iothub" if command_sender is not None else "mqtt",
             "connected": False,
+            "last_message_at": None,
             "telemetry": 0,
             "motion_scored": 0,
             "motion_rejected": 0,
@@ -165,11 +178,21 @@ class Bridge:
 
     def start(self) -> None:
         self.load_classifier()
+        if self.command_sender is not None:
+            # Azure mode: IoT Hub pushes to us through Event Grid, nothing to
+            # connect to. "connected" stays None (unknown) rather than a false
+            # True: only a delivery proves the route works.
+            self.stats["connected"] = None
+            log.info("azure mode: waiting for Event Grid deliveries, no MQTT connection")
+            return
         log.info("connecting to %s:%s", self.settings.mqtt_host, self.settings.mqtt_port)
         self.client.connect_async(self.settings.mqtt_host, self.settings.mqtt_port, keepalive=30)
         self.client.loop_start()
 
     def stop(self) -> None:
+        if self.command_sender is not None:
+            self.command_sender.close()
+            return
         self.client.loop_stop()
         try:
             self.client.disconnect()
@@ -205,16 +228,21 @@ class Bridge:
 
         suffix = message.topic.rsplit("/", 1)[-1]
         try:
-            if suffix == "telemetry":
-                self._handle_telemetry(payload)
-            elif suffix == "motion":
-                self._handle_motion(payload)
-            elif suffix == "event":
-                self._handle_event(payload)
-            elif suffix == "status":
-                self._handle_status(payload)
+            self.dispatch(suffix, payload)
         except Exception:
             log.exception("handler for %s failed", message.topic)
+
+    def dispatch(self, kind: str, payload: Dict[str, Any]) -> None:
+        """Routes one device message, whichever transport it arrived on."""
+        self.stats["last_message_at"] = utcnow()
+        if kind == "telemetry":
+            self._handle_telemetry(payload)
+        elif kind == "motion":
+            self._handle_motion(payload)
+        elif kind == "event":
+            self._handle_event(payload)
+        elif kind == "status":
+            self._handle_status(payload)
 
     # -- handlers ------------------------------------------------------------
     def _handle_telemetry(self, msg: Dict[str, Any]) -> None:
@@ -249,9 +277,15 @@ class Bridge:
 
         # Acknowledge either way. A re-send means our previous ack was lost, and
         # leaving it unacked makes the device burn its five attempts for nothing.
-        self.send_command(msg["device_id"], {"cmd": "ack_alert", "event_id": event_id})
+        # wait=False: in azure mode this runs inside the Event Grid request, which
+        # must not block on the watch answering the direct method.
+        self.send_command(msg["device_id"], {"cmd": "ack_alert", "event_id": event_id}, wait=False)
 
     def _handle_motion(self, msg: Dict[str, Any]) -> None:
+        # Recording comes first and keeps the raw window, so a re-tune can score
+        # it with any future model, not just the one loaded now (issue #9).
+        if self.recorder is not None and self.recorder.active:
+            self.recorder.record(msg)
         if self._classifier is None:
             return
         try:
@@ -317,7 +351,11 @@ class Bridge:
         return True
 
     # -- outbound ------------------------------------------------------------
-    def send_command(self, device_id: str, command: Dict[str, Any]) -> bool:
+    def send_command(self, device_id: str, command: Dict[str, Any], wait: bool = True) -> bool:
+        if self.command_sender is not None:
+            if wait:
+                return self.command_sender.invoke(device_id, command)
+            return self.command_sender.invoke_background(device_id, command)
         topic = self.settings.topic("cmd", device_id)
         info = self.client.publish(topic, json.dumps(command), qos=1)
         ok = info.rc == mqtt.MQTT_ERR_SUCCESS

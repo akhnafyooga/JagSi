@@ -39,3 +39,10 @@ __pycache__/
 frontend/tsconfig.tsbuildinfo
 frontend/.next/
 frontend/node_modules/
+
+# Week 7: Azure device credentials and generated secrets. azure_config.h holds
+# the watch's private key; infra/azure/out/ holds keys and connection settings.
+firmware/jagsi-watch/azure_config.h
+infra/azure/out/
+backend/.env
+*.key.pem

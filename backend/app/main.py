@@ -14,22 +14,33 @@ Endpoints
     POST /api/alerts/{alert_id}/ack              acknowledge, stops device re-sends
     POST /api/devices/{id}/command               ping / set_interval / set_motion
     GET  /api/stream                             server-sent events, live push
+
+Week 7
+    POST /api/ingest/eventgrid?key=...           Azure IoT Hub messages via Event Grid (#8)
+    GET  /api/devices/{id}/summary               AI health summary, Gemini or rules (#10)
+    POST /api/devices/{id}/chat                  caregiver question about the data (#10)
+    GET  /api/recording                          labelled recording status (#9)
+    POST /api/recording/start | /api/recording/stop
 """
 
 from __future__ import annotations
 
 import asyncio
+import hmac
 import json
 import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Set
 
-from fastapi import Body, FastAPI, HTTPException, Request
+from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
+from .ai_summary import HealthAssistant
+from .azure_iot import DirectMethodSender, EventGridError, parse_eventgrid
 from .bridge import Bridge
 from .config import settings
+from .recorder import SUGGESTED_LABELS, MotionRecorder, RecordingError
 from .store import Store, utcnow
 from .vitals import telemetry_to_vitals
 
@@ -58,7 +69,27 @@ def _publish(event: Dict[str, Any]) -> None:
             pass
 
 
-bridge = Bridge(settings, store, on_event=_publish)
+def _command_sender() -> Optional[DirectMethodSender]:
+    if not settings.azure:
+        return None
+    if not settings.azure_iothub_hostname or not settings.azure_service_key:
+        raise RuntimeError(
+            "JAGSI_INGEST=azure needs JAGSI_IOTHUB_HOSTNAME and JAGSI_IOTHUB_POLICY_KEY. "
+            "See docs/azure-setup.md."
+        )
+    if not settings.eventgrid_key:
+        raise RuntimeError(
+            "JAGSI_INGEST=azure needs JAGSI_EVENTGRID_KEY, otherwise anyone who finds "
+            "the webhook URL can post fake telemetry. See docs/azure-setup.md."
+        )
+    return DirectMethodSender(
+        settings.azure_iothub_hostname, settings.azure_service_policy, settings.azure_service_key
+    )
+
+
+recorder = MotionRecorder(settings.recordings_dir)
+bridge = Bridge(settings, store, on_event=_publish, command_sender=_command_sender(), recorder=recorder)
+assistant = HealthAssistant(store, settings)
 
 
 @asynccontextmanager
@@ -86,8 +117,15 @@ def health() -> Dict[str, Any]:
     return {
         "status": "ok",
         "server_time": utcnow(),
-        "broker": f"{settings.mqtt_host}:{settings.mqtt_port}",
-        "subscribed_to": [t for t, _ in settings.subscribe_topics],
+        "ingest": settings.ingest_mode,
+        "broker": (
+            settings.azure_iothub_hostname
+            if settings.azure
+            else f"{settings.mqtt_host}:{settings.mqtt_port}"
+        ),
+        "subscribed_to": [] if settings.azure else [t for t, _ in settings.subscribe_topics],
+        "ai_model": assistant.model_label,
+        "recording": recorder.status()["active"],
         "subscribers": len(_subscribers),
         "bridge": bridge.stats,
     }
@@ -187,8 +225,92 @@ def send_command(device_id: str, command: Dict[str, Any] = Body(...)) -> Dict[st
             detail=f"cmd must be one of {sorted(_ALLOWED_COMMANDS)}, got {cmd!r}",
         )
     if not bridge.send_command(device_id, command):
-        raise HTTPException(status_code=503, detail="broker unreachable, command not sent")
+        detail = (
+            "device did not answer the direct method (offline or busy)"
+            if settings.azure
+            else "broker unreachable, command not sent"
+        )
+        raise HTTPException(status_code=503, detail=detail)
     return {"device_id": device_id, "sent": command}
+
+
+# -- Azure IoT Hub via Event Grid (issue #8) ---------------------------------
+@app.post("/api/ingest/eventgrid")
+async def ingest_eventgrid(request: Request, key: str = Query("")) -> Any:
+    """Receives IoT Hub events that Event Grid delivers to this webhook.
+
+    Event Grid first sends a SubscriptionValidationEvent; answering with its
+    validationCode proves we own the endpoint. After that, each POST is a batch
+    of DeviceTelemetry / DeviceConnected / DeviceDisconnected events.
+    """
+    if not settings.azure:
+        raise HTTPException(status_code=404, detail="Event Grid ingest is off (JAGSI_INGEST is not azure)")
+    if not hmac.compare_digest(key, settings.eventgrid_key):
+        raise HTTPException(status_code=401, detail="wrong or missing key")
+    try:
+        events = await request.json()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="body is not JSON")
+    try:
+        delivery = parse_eventgrid(events)
+    except EventGridError as exc:
+        log.warning("Event Grid delivery refused: %s", exc)
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if delivery.validation_code:
+        log.info("Event Grid subscription validated")
+        return {"validationResponse": delivery.validation_code}
+
+    for kind, payload in delivery.messages:
+        try:
+            bridge.dispatch(kind, payload)
+        except Exception:
+            # One bad message must not make Event Grid retry the whole batch.
+            log.exception("handler for %s from %s failed", kind, payload.get("device_id"))
+    return {"accepted": len(delivery.messages), "skipped": delivery.skipped}
+
+
+# -- AI health summary and chat (issue #10) ----------------------------------
+@app.get("/api/devices/{device_id}/summary")
+def health_summary(device_id: str, refresh: bool = False) -> Dict[str, Any]:
+    return assistant.summary(device_id, force=refresh)
+
+
+@app.post("/api/devices/{device_id}/chat")
+def health_chat(device_id: str, body: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
+    question = body.get("question")
+    if not isinstance(question, str) or not question.strip():
+        raise HTTPException(status_code=400, detail="question must be a non-empty string")
+    history = body.get("history") if isinstance(body.get("history"), list) else None
+    return assistant.chat(device_id, question, history)
+
+
+# -- labelled motion recording (issue #9) ------------------------------------
+@app.get("/api/recording")
+def recording_status() -> Dict[str, Any]:
+    return {**recorder.status(), "suggested_labels": SUGGESTED_LABELS, "directory": settings.recordings_dir}
+
+
+@app.post("/api/recording/start")
+def recording_start(body: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
+    try:
+        session = recorder.start(
+            label=body.get("label", ""),
+            subject=body.get("subject", ""),
+            device_id=body.get("device_id"),
+            note=str(body.get("note", ""))[:200],
+        )
+    except RecordingError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return session
+
+
+@app.post("/api/recording/stop")
+def recording_stop() -> Dict[str, Any]:
+    try:
+        return recorder.stop()
+    except RecordingError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.get("/api/stream")

@@ -2,11 +2,23 @@ import { Icon } from './Icon';
 
 interface AiHealthSummaryProps {
   text: string;
+  /** Where the text came from, e.g. "Gemini · gemini-3.8-flash" or "Data demo". */
   model: string;
   updatedAt: string;
+  loading?: boolean;
+  /** Shows a short note that some numbers behind the summary are simulated. */
+  simulated?: boolean;
+  onRefresh?: () => void;
 }
 
-export function AiHealthSummary({ text, model, updatedAt }: AiHealthSummaryProps) {
+export function AiHealthSummary({
+  text,
+  model,
+  updatedAt,
+  loading = false,
+  simulated = false,
+  onRefresh,
+}: AiHealthSummaryProps) {
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
@@ -25,9 +37,29 @@ export function AiHealthSummary({ text, model, updatedAt }: AiHealthSummaryProps
             <Icon name="psychology" className="text-[14px]" />
             JagSi AI Insight
           </span>
-          <span className="text-xs text-on-surface-variant">{updatedAt}</span>
+          <span className="flex items-center gap-1 text-xs text-on-surface-variant">
+            {updatedAt}
+            {onRefresh && (
+              <button
+                type="button"
+                onClick={onRefresh}
+                disabled={loading}
+                aria-label="Perbarui ringkasan"
+                className="flex h-6 w-6 items-center justify-center rounded-full transition-colors hover:bg-surface-container disabled:opacity-50"
+              >
+                <Icon name="refresh" className={`text-[16px] ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            )}
+          </span>
         </div>
-        <p className="text-sm font-normal leading-relaxed text-on-surface">{text}</p>
+        <p aria-live="polite" className="text-sm font-normal leading-relaxed text-on-surface">
+          {text}
+        </p>
+        {simulated && (
+          <p className="mt-2 text-xs text-on-surface-variant">
+            Detak jantung dan SpO2 masih data simulasi, belum dari sensor asli.
+          </p>
+        )}
         <div className="mt-4 flex items-center justify-between gap-2 border-t border-surface-container-highest/60 pt-3">
           <button
             type="button"

@@ -27,11 +27,11 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      # npm install, not npm ci: package-lock.json is currently out of sync with
-      # package.json (missing @emnapi/runtime). Switch this back to `npm ci` once
-      # the lockfile has been regenerated and committed.
+      # npm ci again (Week 7): the lockfile now matches package.json. The Week 6
+      # regeneration still lacked @emnapi/core, @emnapi/runtime and
+      # @emnapi/wasi-threads, so `npm ci` kept failing until this one.
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Lint
         run: npm run lint
@@ -66,6 +66,14 @@ jobs:
       - name: Test
         run: python -m pytest -q
 
+      # Week 6 pipeline over a local MQTT broker, and the Week 7 Azure path
+      # (Event Grid deliveries through the real webhook, bridge and store).
+      - name: Pipeline check (MQTT)
+        run: pip install amqtt && python scripts/integration_check.py
+
+      - name: Pipeline check (Azure IoT Hub via Event Grid)
+        run: python scripts/eventgrid_check.py
+
       # Proves the model still behaves on windows shaped the way the device sends
       # them. It exits non-zero when an issue #9 target is missed, so it is kept
       # non-blocking until the decision threshold is re-tuned (docs/week6-validation.md).
@@ -74,7 +82,7 @@ jobs:
         run: python scripts/validate_on_device_windows.py --windows 100
 
   firmware:
-    name: Firmware (motion window unit tests)
+    name: Firmware (unit tests and sketch type-check)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -87,3 +95,21 @@ jobs:
             -I firmware/jagsi-watch \
             firmware/test/test_motion_window.cpp -o test_motion_window
           ./test_motion_window
+
+      # azure_method.h parses IoT Hub direct-method topics (issue #8); same idea,
+      # tested on the runner without a board.
+      - name: Build and run the direct-method topic tests
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror \
+            -I firmware/jagsi-watch \
+            firmware/test/test_azure_method.cpp -o test_azure_method
+          ./test_azure_method
+
+      # Type-checks sketch.ino for both transports (public broker and Azure IoT
+      # Hub) against stand-in Arduino headers and the real ArduinoJson. Catches
+      # a broken #if JAGSI_AZURE branch before anyone pastes it into Wokwi.
+      - name: Fetch ArduinoJson
+        run: git clone --depth 1 --branch v7.4.2 https://github.com/bblanchon/ArduinoJson /tmp/ArduinoJson
+
+      - name: Type-check sketch.ino
+        run: firmware/test/check_sketch.sh /tmp/ArduinoJson/src
