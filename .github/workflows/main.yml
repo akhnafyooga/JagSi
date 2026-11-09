@@ -5,11 +5,13 @@ name: CI/CD Pipeline
 # false and the job passed without running lint or a single test. Each job below
 # now names its own working directory.
 
+# Runs on main, on feature branches, and on pull requests into ANY branch.
+# Until Week 7 it only ran for main, so a PR stacked on another feature branch
+# (Week 7 on top of feat/week6-integration) was never tested.
 on:
   push:
-    branches: [main]
+    branches: [main, 'feat/**']
   pull_request:
-    branches: [main]
 
 jobs:
   frontend:
