@@ -365,13 +365,12 @@ class Bridge:
 
     # -- helpers -------------------------------------------------------------
     def _alert_view(self, alert_id: str) -> Optional[Dict[str, Any]]:
-        for alert in self.store.recent_alerts(limit=25):
-            if alert["alert_id"] == alert_id:
-                return alert
-        return None
+        # By id, not by scanning the newest 25: with many alerts in a burst the
+        # one just stored could fall outside that window and be broadcast as None.
+        return self.store.alert(alert_id)
 
     def _broadcast(self, event: Dict[str, Any]) -> None:
-        """Hands an update to the event loop for the SSE subscribers."""
+        """Hands an update to the API, which fans it out to SSE and the alert WebSocket."""
         if self._on_event is None or self._loop is None:
             return
         event.setdefault("at", utcnow())

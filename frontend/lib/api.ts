@@ -187,3 +187,18 @@ export function summarySourceLabel(source: ApiSummary['source'] | 'demo', model:
   if (source === 'rules') return 'Ringkasan otomatis';
   return 'Data demo';
 }
+
+// -- emergency alerts (issue #13) ---------------------------------------------
+
+/** REST fallback for "Saya tangani" when the alert WebSocket is down. */
+export async function acknowledgeAlert(alertId: string, signal?: AbortSignal): Promise<void> {
+  const response = await fetch(`${API_BASE}/api/alerts/${encodeURIComponent(alertId)}/ack`, {
+    method: 'POST',
+    signal,
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`/ack returned ${response.status}`);
+  }
+}

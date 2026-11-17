@@ -1,4 +1,5 @@
 import { Icon } from './Icon';
+import { NotificationBell } from './NotificationBell';
 
 interface TopAppBarProps {
   title: string;
@@ -34,14 +35,7 @@ export function TopAppBar({ title, subtitle, online }: TopAppBarProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        <button
-          aria-label="Notifikasi"
-          type="button"
-          className="relative flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container active:scale-95"
-        >
-          <Icon name="notifications" className="text-[24px]" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-error" />
-        </button>
+        <NotificationBell />
         <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-surface-container-high ring-2 ring-surface-container-highest">
           <Icon name="person" className="text-[22px] text-on-surface-variant" />
         </div>

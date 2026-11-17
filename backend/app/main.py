@@ -21,6 +21,10 @@ Week 7
     POST /api/devices/{id}/chat                  caregiver question about the data (#10)
     GET  /api/recording                          labelled recording status (#9)
     POST /api/recording/start | /api/recording/stop
+
+Week 8
+    WS   /ws/alerts                              emergency alerts pushed instantly, and
+                                                 the caregiver's acknowledgement sent back (#13)
 """
 
 from __future__ import annotations
@@ -30,9 +34,10 @@ import hmac
 import json
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
-from fastapi import Body, FastAPI, HTTPException, Query, Request
+from fastapi import Body, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
@@ -40,6 +45,7 @@ from .ai_summary import HealthAssistant
 from .azure_iot import DirectMethodSender, EventGridError, parse_eventgrid
 from .bridge import Bridge
 from .config import settings
+from .realtime import ALERT_EVENTS, Hub
 from .recorder import SUGGESTED_LABELS, MotionRecorder, RecordingError
 from .store import Store, utcnow
 from .vitals import telemetry_to_vitals
@@ -48,25 +54,20 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 log = logging.getLogger("jagsi.api")
 
 store = Store(settings.db_path)
-_subscribers: Set[asyncio.Queue] = set()
+hub = Hub()
 
 
 def _publish(event: Dict[str, Any]) -> None:
-    """Fans an update out to every open SSE connection.
+    """Fans an update out to every SSE stream and alert WebSocket.
 
-    Runs on the event loop thread. A queue that is full means that client is not
-    keeping up, so its oldest update is dropped rather than blocking the bridge.
+    Safe to call from any thread; see app/realtime.py for why that matters.
     """
-    for queue in list(_subscribers):
-        if queue.full():
-            try:
-                queue.get_nowait()
-            except asyncio.QueueEmpty:
-                pass
-        try:
-            queue.put_nowait(event)
-        except asyncio.QueueFull:
-            pass
+    event.setdefault("at", utcnow())
+    if event.get("type") == "alert" and isinstance(event.get("data"), dict):
+        # The bridge hands over the raw row; listeners get the same shape as
+        # GET /api/alerts, with vitals as an object rather than a JSON string.
+        event = {**event, "data": _shape_alert(event["data"])}
+    hub.publish(event)
 
 
 def _command_sender() -> Optional[DirectMethodSender]:
@@ -126,7 +127,8 @@ def health() -> Dict[str, Any]:
         "subscribed_to": [] if settings.azure else [t for t, _ in settings.subscribe_topics],
         "ai_model": assistant.model_label,
         "recording": recorder.status()["active"],
-        "subscribers": len(_subscribers),
+        "subscribers": hub.count(),
+        "alert_sockets": hub.count(ALERT_EVENTS),
         "bridge": bridge.stats,
     }
 
@@ -183,34 +185,63 @@ def telemetry_history(device_id: str, limit: int = 60) -> Dict[str, Any]:
 @app.get("/api/alerts")
 def alerts(limit: int = 20, device_id: Optional[str] = None) -> Dict[str, Any]:
     limit = max(1, min(limit, 200))
-    rows = store.recent_alerts(limit=limit, device_id=device_id)
-    for row in rows:
-        if row.get("vitals_json"):
-            try:
-                row["vitals"] = json.loads(row.pop("vitals_json"))
-            except json.JSONDecodeError:
-                row["vitals"] = None
-        else:
-            row.pop("vitals_json", None)
-            row["vitals"] = None
-    return {"alerts": rows}
+    return {"alerts": [_shape_alert(row) for row in store.recent_alerts(limit=limit, device_id=device_id)]}
+
+
+def _shape_alert(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Turns the stored vitals_json string into an object, for every alert output."""
+    row = dict(row)
+    raw = row.pop("vitals_json", None)
+    try:
+        row["vitals"] = json.loads(raw) if raw else None
+    except json.JSONDecodeError:
+        row["vitals"] = None
+    return row
+
+
+class UnknownAlert(LookupError):
+    pass
+
+
+def _acknowledge(alert_id: str, via: str) -> Dict[str, Any]:
+    """Marks an alert handled, tells the watch, and tells every open dashboard.
+
+    Shared by POST /api/alerts/{id}/ack and the WebSocket "ack" message so both
+    paths behave the same. May block on an Azure direct method, so async callers
+    run it in the threadpool.
+    """
+    alert = store.alert(alert_id)
+    if alert is None:
+        raise UnknownAlert(alert_id)
+
+    already = alert["status"] == "acknowledged"
+    store.acknowledge_alert(alert_id)
+    # Only a device-raised event needs the ack; an ML alert was never waiting on
+    # one. Re-sending it for an alert that was already handled is harmless and
+    # stops a watch that missed the first ack from repeating the alarm.
+    sent = False
+    if alert["source"] == "device_rule":
+        sent = bridge.send_command(alert["device_id"], {"cmd": "ack_alert", "event_id": alert_id})
+    _publish(
+        {
+            "type": "alert_ack",
+            "data": {"alert_id": alert_id, "device_id": alert["device_id"], "via": via, "acked_at": utcnow()},
+        }
+    )
+    return {
+        "alert_id": alert_id,
+        "status": "acknowledged",
+        "already_acknowledged": already,
+        "ack_sent_to_device": sent,
+    }
 
 
 @app.post("/api/alerts/{alert_id}/ack")
 def acknowledge(alert_id: str) -> Dict[str, Any]:
-    alerts_by_id = {a["alert_id"]: a for a in store.recent_alerts(limit=200)}
-    alert = alerts_by_id.get(alert_id)
-    if alert is None:
+    try:
+        return _acknowledge(alert_id, via="api")
+    except UnknownAlert:
         raise HTTPException(status_code=404, detail=f"unknown alert {alert_id}")
-
-    store.acknowledge_alert(alert_id)
-    # Only a device-raised event needs the MQTT ack; an ML alert was never
-    # waiting on one.
-    sent = False
-    if alert["source"] == "device_rule":
-        sent = bridge.send_command(alert["device_id"], {"cmd": "ack_alert", "event_id": alert_id})
-    _publish({"type": "alert_ack", "data": {"alert_id": alert_id}})
-    return {"alert_id": alert_id, "status": "acknowledged", "ack_sent_to_device": sent}
 
 
 _ALLOWED_COMMANDS = {"ping", "set_interval", "set_motion", "ack_alert"}
@@ -317,12 +348,13 @@ def recording_stop() -> Dict[str, Any]:
 async def stream(request: Request) -> StreamingResponse:
     """Server-sent events, so the dashboard updates without polling.
 
-    SSE rather than WebSockets: the traffic is one-directional (device to
-    caregiver), it survives proxies that mangle upgrades, and the browser
-    reconnects on its own.
+    SSE for telemetry: that traffic is one-directional (device to caregiver), it
+    survives proxies that mangle upgrades, and the browser reconnects on its own.
+    Emergency alerts also have /ws/alerts (below), because there the caregiver
+    has to answer.
     """
-    queue: asyncio.Queue = asyncio.Queue(maxsize=50)
-    _subscribers.add(queue)
+    sub = hub.subscribe()
+    queue = sub.queue
 
     async def generator():
         try:
@@ -337,10 +369,116 @@ async def stream(request: Request) -> StreamingResponse:
                     continue
                 yield f"event: {event['type']}\ndata: {json.dumps(event['data'], default=str)}\n\n"
         finally:
-            _subscribers.discard(queue)
+            hub.unsubscribe(sub)
 
     return StreamingResponse(
         generator(),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+# -- emergency alerts over WebSocket (issue #13) ------------------------------
+WS_PING_SECONDS = 20.0
+WS_MAX_MESSAGE = 1024
+
+
+def _origin_allowed(origin: Optional[str]) -> bool:
+    """Blocks cross-site WebSocket hijacking.
+
+    Browsers do not apply CORS to WebSockets, so without this check any page the
+    caregiver happens to open could connect and acknowledge (silence) a fall
+    alert. A missing Origin means a non-browser client (tests, scripts), which
+    cannot be driven by a malicious page.
+    """
+    if origin is None:
+        return True
+    return "*" in settings.cors_origins or origin.rstrip("/") in settings.cors_origins
+
+
+def _open_alerts(limit: int = 20) -> List[Dict[str, Any]]:
+    return [_shape_alert(a) for a in store.open_alerts(limit=limit)]
+
+
+@app.websocket("/ws/alerts")
+async def alert_socket(ws: WebSocket) -> None:
+    """Pushes every new fall / SOS alert the moment it is stored.
+
+    Server to dashboard
+        {"type": "hello",     "data": {"at": ..., "open_alerts": [...]}}
+        {"type": "alert",     "data": <alert>}           new emergency
+        {"type": "alert_ack", "data": {"alert_id", ...}} handled (by anyone)
+        {"type": "ack_result","data": {...}}             answer to this client's ack
+        {"type": "pong"} / {"type": "ping"}
+        {"type": "error",     "data": {"message": ...}}
+
+    Dashboard to server
+        {"type": "ack", "alert_id": "..."}   caregiver pressed "Saya tangani"
+        {"type": "ping"}
+
+    The hello snapshot means a dashboard that reconnects (phone woke up, Wi-Fi
+    dropped) still sees an alert that fired while it was away.
+    """
+    if not _origin_allowed(ws.headers.get("origin")):
+        # 1008 = policy violation. Closing before accept() refuses the upgrade.
+        await ws.close(code=1008)
+        return
+
+    await ws.accept()
+    sub = hub.subscribe(ALERT_EVENTS)
+    try:
+        await ws.send_json({"type": "hello", "data": {"at": utcnow(), "open_alerts": _open_alerts()}})
+
+        async def pump_out() -> None:
+            while True:
+                try:
+                    event = await asyncio.wait_for(sub.queue.get(), timeout=WS_PING_SECONDS)
+                except asyncio.TimeoutError:
+                    # Keeps idle NATs and proxies from dropping the socket, and
+                    # lets the browser notice a dead connection.
+                    await ws.send_json({"type": "ping", "data": {"at": utcnow()}})
+                    continue
+                await ws.send_text(json.dumps({"type": event["type"], "data": event.get("data")}, default=str))
+
+        async def pump_in() -> None:
+            while True:
+                raw = await ws.receive_text()
+                if len(raw) > WS_MAX_MESSAGE:
+                    await ws.send_json({"type": "error", "data": {"message": "message too large"}})
+                    continue
+                try:
+                    msg = json.loads(raw)
+                except json.JSONDecodeError:
+                    await ws.send_json({"type": "error", "data": {"message": "message is not JSON"}})
+                    continue
+                kind = msg.get("type") if isinstance(msg, dict) else None
+                if kind == "ping":
+                    await ws.send_json({"type": "pong", "data": {"at": utcnow()}})
+                elif kind == "ack":
+                    alert_id = msg.get("alert_id")
+                    if not isinstance(alert_id, str) or not alert_id or len(alert_id) > 100:
+                        await ws.send_json({"type": "error", "data": {"message": "ack needs an alert_id"}})
+                        continue
+                    try:
+                        result = await run_in_threadpool(_acknowledge, alert_id, "websocket")
+                    except UnknownAlert:
+                        await ws.send_json(
+                            {"type": "error", "data": {"message": f"unknown alert {alert_id}", "alert_id": alert_id}}
+                        )
+                        continue
+                    await ws.send_json({"type": "ack_result", "data": result})
+                else:
+                    await ws.send_json({"type": "error", "data": {"message": f"unknown message type {kind!r}"}})
+
+        tasks = [asyncio.create_task(pump_out()), asyncio.create_task(pump_in())]
+        done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        for task in pending:
+            task.cancel()
+        for task in done:
+            exc = task.exception()
+            if exc is not None and not isinstance(exc, WebSocketDisconnect):
+                log.warning("alert socket closed: %r", exc)
+    except WebSocketDisconnect:
+        pass
+    finally:
+        hub.unsubscribe(sub)

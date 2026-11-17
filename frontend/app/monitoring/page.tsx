@@ -1,9 +1,9 @@
 import { TopAppBar } from '@/components/TopAppBar';
 import { StatusBanner } from '@/components/StatusBanner';
 import { VitalCard } from '@/components/VitalCard';
-import { FallStatusCard } from '@/components/FallStatusCard';
+import { LiveFallStatus } from '@/components/LiveFallStatus';
 import { Icon } from '@/components/Icon';
-import { elder, fallStatus, vitals } from '@/lib/mock-data';
+import { elder, vitals } from '@/lib/mock-data';
 
 export default function MonitoringPage() {
   const [heartRate, ...others] = vitals;
@@ -39,11 +39,8 @@ export default function MonitoringPage() {
           ))}
         </div>
 
-        <FallStatusCard
-          status={fallStatus.status}
-          label={fallStatus.label}
-          note={fallStatus.note}
-        />
+        {/* Live since Week 8 (issue #13). The cards above are still mock data. */}
+        <LiveFallStatus />
       </main>
     </>
   );

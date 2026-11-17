@@ -1,9 +1,10 @@
 import { TopAppBar } from '@/components/TopAppBar';
 import { LiveVitals } from '@/components/LiveVitals';
-import { FallStatusCard } from '@/components/FallStatusCard';
+import { LiveFallStatus } from '@/components/LiveFallStatus';
+import { AlertSettingsCard } from '@/components/AlertSettingsCard';
 import { LiveAiSummary } from '@/components/LiveAiSummary';
 import { ChatAssistant } from '@/components/ChatAssistant';
-import { elder, fallStatus } from '@/lib/mock-data';
+import { elder } from '@/lib/mock-data';
 
 export default function HomePage() {
   return (
@@ -13,17 +14,14 @@ export default function HomePage() {
       <main className="space-y-4 px-4 pt-3">
         {/*
           Vital signs and the status banner are live from the backend as of
-          Week 6; the AI summary and chat are live as of Week 7 (issue #10).
-          The fall status card is still the mock data from issue #12 until the
-          alert stream is wired into it.
+          Week 6; the AI summary and chat are live as of Week 7 (issue #10);
+          the fall status card follows the alert WebSocket as of Week 8 (#13).
         */}
+        <AlertSettingsCard compact />
+
         <LiveVitals />
 
-        <FallStatusCard
-          status={fallStatus.status}
-          label={fallStatus.label}
-          note={fallStatus.note}
-        />
+        <LiveFallStatus />
 
         <LiveAiSummary />
 

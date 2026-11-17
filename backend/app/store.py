@@ -249,6 +249,21 @@ class Store:
             rows = conn.execute(sql, params).fetchall()
         return [dict(r) for r in rows]
 
+    def alert(self, alert_id: str) -> Optional[Dict[str, Any]]:
+        with self._connect() as conn:
+            row = conn.execute("SELECT * FROM alert_event WHERE alert_id = ?", (alert_id,)).fetchone()
+        return dict(row) if row else None
+
+    def open_alerts(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Alerts nobody has acknowledged yet, newest first (issue #13)."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                """SELECT * FROM alert_event WHERE status = 'unresolved'
+                   ORDER BY received_at DESC, rowid DESC LIMIT ?""",
+                (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     def last_device_alert_at(self, device_id: str, alert_type: str) -> Optional[str]:
         """Receive time of the newest device-rule alert, for duplicate suppression."""
         with self._connect() as conn:

@@ -15,15 +15,24 @@ Week 7 added three things to `app/`:
 - **Labelled recording** (#9, `recorder.py`): records real motion windows for
   `scripts/retune_threshold.py`. Protocol: `docs/recording-protocol.md`.
 
+Week 8 added **real-time emergency notifications** (#13, `realtime.py` and
+`WS /ws/alerts` in `main.py`): every new fall or SOS is pushed to the dashboard the
+moment it is stored, and the caregiver's "Saya tangani" goes back on the same
+socket, is stored, is forwarded to the watch as `ack_alert`, and closes the alert
+on every other open dashboard.
+
 The bridge is the piece that connects them: it subscribes to the device's MQTT
 topics, stores telemetry, feeds motion windows to the classifier, and pushes
 updates to the dashboard over server-sent events.
 
 ```
-device --MQTT--> bridge --> SQLite --> FastAPI --SSE--> Next.js dashboard
-                    |
+device --MQTT--> bridge --> SQLite --> FastAPI --SSE (telemetry)-------> Next.js dashboard
+                    |                     \----WebSocket (alerts, ack)--/
                     +--> FallClassifier --> ALERT_EVENT
 ```
+
+SSE stays for telemetry (one direction, reconnects by itself). Alerts get a
+WebSocket because the caregiver has to answer them.
 
 ## Setup
 
@@ -79,6 +88,7 @@ curl -s localhost:8000/api/health | python3 -m json.tool
 | POST | `/api/alerts/{alert_id}/ack` | acknowledge; stops the device re-sending |
 | POST | `/api/devices/{id}/command` | `ping`, `set_interval`, `set_motion`, `ack_alert` |
 | GET | `/api/stream` | server-sent events: telemetry, alert, alert_ack, status |
+| WS | `/ws/alerts` | emergency alerts pushed instantly; send `{"type":"ack","alert_id":...}` to handle one (#13) |
 | POST | `/api/ingest/eventgrid?key=...` | Azure mode only: IoT Hub messages from Event Grid |
 | GET | `/api/devices/{id}/summary?refresh=false` | AI health summary in Bahasa Indonesia, cached 60 s |
 | POST | `/api/devices/{id}/chat` | `{"question": "...", "history": [...]}`, answer about the stored data |
@@ -98,7 +108,7 @@ curl -s localhost:8000/api/health | python3 -m json.tool
 | `JAGSI_FALL_THRESHOLD` | unset | overrides the artifact's threshold, see below |
 | `JAGSI_DUPLICATE_WINDOW_S` | `10` | suppress an ML alert this soon after a device alert |
 | `JAGSI_ML_COOLDOWN_S` | `15` | minimum gap between two ML alerts for one device |
-| `JAGSI_CORS_ORIGINS` | `http://localhost:3000,...` | comma separated |
+| `JAGSI_CORS_ORIGINS` | `http://localhost:3000,...` | comma separated; also the only origins allowed to open `/ws/alerts` |
 | `JAGSI_INGEST` | `mqtt` | `azure` switches to IoT Hub + Event Grid (no MQTT connection) |
 | `JAGSI_IOTHUB_HOSTNAME` | unset | azure mode: `<hub>.azure-devices.net` |
 | `JAGSI_IOTHUB_POLICY` | `service` | azure mode: shared access policy for direct methods |
@@ -133,12 +143,35 @@ python3 scripts/retune_threshold.py --write-artifact ml/artifacts/fall_clf_retun
 It scores falls per session and false alerts the way the backend raises them,
 picks a threshold that meets both targets, and never overwrites the deployed model.
 
+## The alert WebSocket (#13)
+
+```
+server -> dashboard                         dashboard -> server
+{"type":"hello","data":{"open_alerts":[..]}}  {"type":"ack","alert_id":"..."}
+{"type":"alert","data":<alert>}               {"type":"ping"}
+{"type":"alert_ack","data":{"alert_id","via"}}
+{"type":"ack_result","data":{...}}
+{"type":"ping"|"pong"} / {"type":"error",...}
+```
+
+- `hello` lists every alert nobody has handled yet, so a phone that reconnects
+  after sleeping still sees an alert that fired meanwhile.
+- `alert_ack` goes to every socket, whether the ack came from a socket or from
+  `POST /api/alerts/{id}/ack`, so two caregivers never both rush to the same alert
+  without knowing.
+- Browsers do not apply CORS to WebSockets. The socket checks the `Origin`
+  header against `JAGSI_CORS_ORIGINS` and refuses anything else (HTTP 403);
+  otherwise any website the caregiver opens could connect and silence a fall alert.
+- The server pings every 20 s and the dashboard every 25 s, so a dead connection
+  is noticed and the dashboard reconnects (1 s, 2 s, 4 s ... up to 30 s).
+
 ## Tests
 
 ```bash
-python3 -m pytest -q                      # 103 tests: ml/ and app/
+python3 -m pytest -q                      # 124 tests: ml/ and app/
 python3 scripts/integration_check.py      # 22 checks, whole pipeline on a local broker
 python3 scripts/eventgrid_check.py        # 17 checks, the same over Azure (Event Grid replay)
+python3 scripts/alert_ws_check.py         # 13 checks, watch -> /ws/alerts -> ack -> watch (#13)
 ```
 
 `scripts/integration_check.py` is the one to run after touching the firmware payload,
@@ -155,7 +188,8 @@ backend/
 │   ├── bridge.py        message routing, window validation, classification, alerts
 │   ├── recorder.py      labelled motion recording for re-tuning (#9)
 │   ├── config.py        settings, all environment-overridable
-│   ├── main.py          FastAPI endpoints and the SSE stream
+│   ├── main.py          FastAPI endpoints, the SSE stream and /ws/alerts
+│   ├── realtime.py      thread-safe fan-out of live events (#13)
 │   ├── store.py         SQLite, table names follow the ERD
 │   ├── vitals.py        telemetry row -> dashboard cards, with display bands
 │   └── tests/
@@ -163,6 +197,8 @@ backend/
 └── scripts/
     ├── dev_broker.py                  local MQTT broker
     ├── integration_check.py           whole-pipeline check
+    ├── eventgrid_check.py             the same over Azure Event Grid (#8)
+    ├── alert_ws_check.py              real-time alerts end to end (#13)
     ├── retune_threshold.py            pick a threshold from real recordings (#9)
     └── validate_on_device_windows.py  model vs device-shaped windows
 ```

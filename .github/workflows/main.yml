@@ -76,6 +76,11 @@ jobs:
       - name: Pipeline check (Azure IoT Hub via Event Grid)
         run: python scripts/eventgrid_check.py
 
+      # Week 8 (issue #13): watch -> MQTT -> backend -> /ws/alerts, timed, plus
+      # the caregiver's acknowledgement going back to the watch.
+      - name: Real-time alert check (WebSocket)
+        run: python scripts/alert_ws_check.py
+
       # Proves the model still behaves on windows shaped the way the device sends
       # them. It exits non-zero when an issue #9 target is missed, so it is kept
       # non-blocking until the decision threshold is re-tuned (docs/week6-validation.md).
