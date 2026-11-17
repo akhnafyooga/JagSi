@@ -217,3 +217,15 @@ def test_chat_endpoint_validates_and_answers():
     body = client.post("/api/devices/ai-api/chat", json={"question": "Bagaimana kondisinya?"}).json()
     assert body["source"] == "rules"
     assert "Asisten AI sedang tidak tersambung" in body["answer"]
+
+
+def test_default_gemini_model_matches_the_documentation():
+    """Week 7 docs said gemini-3.8-flash while the code defaulted to 2.5 Flash,
+    which new Google projects can no longer call (fixed in Week 8)."""
+    from app.config import Settings
+    from pathlib import Path
+
+    readme = (Path(__file__).resolve().parents[2] / "README.md").read_text(encoding="utf-8")
+    default = Settings.__dataclass_fields__["gemini_model"].default
+    assert default == "gemini-3.8-flash"
+    assert f"`{default}`" in readme

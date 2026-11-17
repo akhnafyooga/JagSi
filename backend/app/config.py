@@ -73,7 +73,11 @@ class Settings:
     # Gemini health summaries (issue #10). Without a key the API falls back to a
     # rule-based summary so the dashboard still works offline and in tests.
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "") or os.getenv("JAGSI_GEMINI_API_KEY", "")
-    gemini_model: str = os.getenv("JAGSI_GEMINI_MODEL", "gemini-2.5-flash")
+    # gemini-3.8-flash, as docs/week7-validation.md and backend/README.md say.
+    # The Week 7 code still defaulted to gemini-2.5-flash, which Google now only
+    # serves to projects that used it before; a new key would get an error and
+    # every summary would silently fall back to the rules.
+    gemini_model: str = os.getenv("JAGSI_GEMINI_MODEL", "gemini-3.8-flash")
     gemini_timeout_s: float = float(os.getenv("JAGSI_GEMINI_TIMEOUT_S", "20"))
     summary_cache_seconds: int = int(os.getenv("JAGSI_SUMMARY_CACHE_S", "60"))
     elder_name: str = os.getenv("JAGSI_ELDER_NAME", "Ibu Sari")
