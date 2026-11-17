@@ -1,16 +1,16 @@
 <?xml version='1.0' encoding='utf-8'?>
-<svg aria-labelledby="title desc" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" aria-labelledby="title desc" viewBox="0 0 900 640" role="img">
   <title id="title">JagSi sprint issues by status</title>
-  <desc id="desc">GitHub snapshot on 17 November 2026. Closed: 14, 6 and 12. Open: 5, 7, 11, 8, 9, 10 and 13. Release validation is tracked across existing issues.</desc>
+  <desc id="desc">GitHub snapshot on 17 November 2026. Open: 5, 7, 8, 9, 10 and 13. Closed: 6, 11, 12, 14 and 19.</desc>
   <rect x="0" y="0" width="900" height="640" rx="18" fill="#f4f6f9" />
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="29" font-weight="700" x="30" y="46" fill="#182536">JagSi sprint issues</text>
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="400" x="30" y="73" fill="#4c5c6e">GitHub issue status on 17 November 2026</text>
   <rect x="24" y="94" width="283" height="43" rx="8" fill="#e3e9f1" />
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="17" font-weight="700" x="38" y="121" fill="#24394a">Sprint workstream</text>
   <rect x="318" y="94" width="300" height="43" rx="8" fill="#fff0cc" />
-  <text font-family="system-ui, Segoe UI, sans-serif" font-size="17" font-weight="700" x="332" y="121" fill="#603e00">Open · 7</text>
+  <text font-family="system-ui, Segoe UI, sans-serif" font-size="17" font-weight="700" x="332" y="121" fill="#603e00">Open · 6</text>
   <rect x="630" y="94" width="246" height="43" rx="8" fill="#d9f3e7" />
-  <text font-family="system-ui, Segoe UI, sans-serif" font-size="17" font-weight="700" x="644" y="121" fill="#12543e">Closed · 3</text>
+  <text font-family="system-ui, Segoe UI, sans-serif" font-size="17" font-weight="700" x="644" y="121" fill="#12543e">Closed · 5</text>
   <rect x="24" y="146" width="852" height="59" rx="8" fill="#ffffff" />
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="16" font-weight="650" x="38" y="173" fill="#182536">1. Planning and documentation</text>
   <rect x="639" y="158" width="225" height="23" rx="5" fill="#e6f7ef" />
@@ -21,8 +21,8 @@
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="550" x="335" y="241" fill="#603e00">#5  Wokwi sensors</text>
   <rect x="327" y="251" width="280" height="23" rx="5" fill="#fff5de" />
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="550" x="335" y="268" fill="#603e00">#7  Physical casing and wearable</text>
-  <rect x="327" y="278" width="280" height="23" rx="5" fill="#fff5de" />
-  <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="550" x="335" y="295" fill="#603e00">#11  Wireframes and UI kit</text>
+  <rect x="639" y="251" width="225" height="23" rx="5" fill="#e6f7ef" />
+  <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="550" x="647" y="268" fill="#12543e">#11  Wireframes and UI kit</text>
   <rect x="639" y="224" width="225" height="23" rx="5" fill="#e6f7ef" />
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="550" x="647" y="241" fill="#12543e">#6  MQTT telemetry pipeline</text>
   <rect x="24" y="320" width="852" height="59" rx="8" fill="#ffffff" />
@@ -32,7 +32,7 @@
   <rect x="24" y="386" width="852" height="79" rx="8" fill="#ffffff" />
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="16" font-weight="650" x="38" y="413" fill="#182536">4. Fall detection and caregiver AI</text>
   <rect x="327" y="398" width="280" height="23" rx="5" fill="#fff5de" />
-  <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="550" x="335" y="415" fill="#603e00">#9  Fall model calibration</text>
+  <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="550" x="335" y="415" fill="#603e00">#9  Physical fall-model validation</text>
   <rect x="327" y="425" width="280" height="23" rx="5" fill="#fff5de" />
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="550" x="335" y="442" fill="#603e00">#10  Gemini health digests</text>
   <rect x="24" y="472" width="852" height="59" rx="8" fill="#ffffff" />
@@ -44,4 +44,6 @@
   <rect x="24" y="538" width="852" height="59" rx="8" fill="#ffffff" />
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="16" font-weight="650" x="38" y="565" fill="#182536">6. System validation and release</text>
   <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="400" x="335" y="565" fill="#4c5c6e">Validation tracked under #7, #8, #9, #10 and #13.</text>
+  <rect x="639" y="398" width="225" height="23" rx="5" fill="#e6f7ef" />
+  <text font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="550" x="647" y="415" fill="#12543e">#19  Calibration protocol</text>
 </svg>

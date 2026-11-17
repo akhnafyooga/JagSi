@@ -289,7 +289,7 @@ The documented end-to-end development setup lives on the [Week 6 integration bra
 | --- | --- |
 | Wearable and MQTT | Wokwi firmware publishes telemetry, alerts, and device state and receives commands. Heart rate and SpO2 are simulated in Wokwi. Physical sensor and casing validation remain open. |
 | Week 6 integration | PR #18 contains the 30-sample, 10 Hz motion windows, FastAPI MQTT bridge, SQLite storage, and live dashboard feed over server-sent events. The pull request is open. |
-| Fall detection | The original model scored 0.985 recall and 0.914 precision on held-out synthetic windows from its training generator. Firmware-shaped synthetic validation yielded 0.403 precision and flagged 96.5% of walking windows at threshold 0.11. Physical MPU6050 calibration and held-out evaluation remain open. |
+| Fall detection | The original model scored 0.985 recall and 0.914 precision on held-out synthetic windows from its training generator. Firmware-shaped synthetic validation yielded 0.401 precision and flagged 96.0% of walking windows at threshold 0.11. The [calibration protocol](docs/fall-calibration.md) is complete. Physical MPU6050 calibration and held-out evaluation remain open. |
 | Azure and Gemini | Week 7 reports local Event Grid replay, threshold-retuning tooling, and Bahasa Indonesia summaries and chat with a rule-based fallback. A published Week 7 commit, live Azure and Gemini checks, and an ESP32 target build are pending. |
 
 See the [project portal](docs/index.md) for sprint status, issue links, and validation evidence.
