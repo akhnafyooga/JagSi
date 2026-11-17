@@ -81,6 +81,15 @@ erDiagram
 | 5. Caregiver dashboard | In progress | The Next.js screens are implemented on the frontend branch ([#12](https://github.com/akhnafyooga/JagSi/issues/12)). PR #18 demonstrates SSE vitals with polling and demo fallback. Verify audible emergency notifications and agree on the transport acceptance criterion ([#13](https://github.com/akhnafyooga/JagSi/issues/13)). |
 | 6. System validation and release | In progress | Week 6 reports 22 local end-to-end bridge checks and 22 frontend tests. Week 7 reports 103 backend and 31 frontend tests pending a published commit and CI run. Physical hardware, live services and a CI run that enforces backend test failures remain pending. |
 
+### Sprint issue diagram
+
+![JagSi sprint issue status by workstream. Seven issues are open and three are closed.](assets/sprint-issue-status.svg)
+
+This snapshot shows GitHub issue states as of 17 November 2026. Sprint 6 validation is tracked across the existing hardware, cloud, model, AI and notification issues.
+
+- **Open:** [#5 Wokwi sensors](https://github.com/akhnafyooga/JagSi/issues/5), [#7 wearable assembly](https://github.com/akhnafyooga/JagSi/issues/7), [#8 Azure ingestion](https://github.com/akhnafyooga/JagSi/issues/8), [#9 fall model](https://github.com/akhnafyooga/JagSi/issues/9), [#10 AI health digests](https://github.com/akhnafyooga/JagSi/issues/10), [#11 wireframes and component kit](https://github.com/akhnafyooga/JagSi/issues/11), and [#13 emergency notifications](https://github.com/akhnafyooga/JagSi/issues/13).
+- **Closed:** [#6 MQTT pipeline](https://github.com/akhnafyooga/JagSi/issues/6), [#12 Next.js frontend](https://github.com/akhnafyooga/JagSi/issues/12), and [#14 initial documentation](https://github.com/akhnafyooga/JagSi/issues/14).
+
 ### Published development evidence
 
 - [MQTT contract](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/docs/mqtt-contract.md) and [hardware bill of materials](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/docs/hardware-bom.md).
