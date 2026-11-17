@@ -68,23 +68,24 @@ erDiagram
         datetime timestamp
     }
 ```
-## Gantt-Chart or Sprint Status
-```
-gantt
-    title JagSi 3-Sprint SDLC Timeline
-    dateFormat  YYYY-MM-DD
-    axisFormat  %b %d
+## Sprint Status
 
-    section Sprint 1: Hardware & UI Setup
-    README Setup & Product Descriptions (#14)  :done, task14, 2026-09-19, 2026-10-02
-    Design UI/UX Wireframes & Component Kit (#11) :active, task11, 2026-09-19, 2026-10-02
-    Interface ESP32 on Wokwi (#5)              :task5, 2026-09-19, 2026-10-02
-    Program MQTT Pub/Sub Pipeline (#6)         :task6, 2026-09-19, 2026-10-02
-    Assemble Casing & Wearable Prototype (#7)  :task7, 2026-09-19, 2026-10-02
+**17 November 2026**
 
-    section Sprint 2: Cloud Infrastructure & AI
-    Deploy Azure IoT Hub & Event Grid (#8)     :task8, 2026-10-03, 2026-10
-```
+| Sprint | Status | Progress and remaining work |
+| --- | --- | --- |
+| 1. Planning and documentation | Complete | Product scope, functional requirements, ERD and the Pages portal are in place ([#14](https://github.com/akhnafyooga/JagSi/issues/14)). |
+| 2. Hardware simulation and UI design | In progress | MQTT pub/sub was validated with Wokwi and a public broker ([#6](https://github.com/akhnafyooga/JagSi/issues/6), [PR #17](https://github.com/akhnafyooga/JagSi/pull/17)). The Week 6 branch records the physical and simulated sensor configurations ([#5](https://github.com/akhnafyooga/JagSi/issues/5)). Wireframes and the dashboard exist. Final design-kit evidence and physical assembly remain open ([#11](https://github.com/akhnafyooga/JagSi/issues/11), [#7](https://github.com/akhnafyooga/JagSi/issues/7)). |
+| 3. Cloud ingestion | In progress | The [Week 6 PR](https://github.com/akhnafyooga/JagSi/pull/18) provides a development MQTT-to-SQLite bridge and API. Week 7 reports 17/17 local Event Grid replay checks. Publish the tested revision and validate X.509 device traffic and direct-method acknowledgments on Azure ([#8](https://github.com/akhnafyooga/JagSi/issues/8)). |
+| 4. Fall detection and caregiver AI | In progress | The reproducible classifier and device-format validation are available. Week 7 reports synthetic calibration tooling and summary and chat with a labelled rule-based fallback. Physical MPU6050 recordings, held-out model evaluation and live Gemini requests remain open ([#9](https://github.com/akhnafyooga/JagSi/issues/9), [#10](https://github.com/akhnafyooga/JagSi/issues/10)). |
+| 5. Caregiver dashboard | In progress | The Next.js screens are implemented on the frontend branch ([#12](https://github.com/akhnafyooga/JagSi/issues/12)). PR #18 demonstrates SSE vitals with polling and demo fallback. Verify audible emergency notifications and agree on the transport acceptance criterion ([#13](https://github.com/akhnafyooga/JagSi/issues/13)). |
+| 6. System validation and release | In progress | Week 6 reports 22 local end-to-end bridge checks and 22 frontend tests. Week 7 reports 103 backend and 31 frontend tests pending a published commit and CI run. Physical hardware, live services and a CI run that enforces backend test failures remain pending. |
+
+### Published development evidence
+
+- [MQTT contract](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/docs/mqtt-contract.md) and [hardware bill of materials](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/docs/hardware-bom.md).
+- [Week 6 validation](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/docs/week6-validation.md) and [live dashboard capture](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/docs/evidence/dashboard-live.png).
+- [Week 6 CI run](https://github.com/akhnafyooga/JagSi/actions/runs/41872493421) and [workflow configuration](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/.github/workflows/main.yml). The backend test step allows failures, so the overall green result has limited coverage.
 
 ## UI/UX Design & Low-Fidelity Wireframe
 UI/UX Design & Low-Fidelity Wireframes

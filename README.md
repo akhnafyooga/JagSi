@@ -36,7 +36,7 @@ The system is designed around the needs of elderly individuals and their caregiv
 
 ---
 
-## System Architecture
+## Target System Architecture
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
@@ -92,7 +92,7 @@ The system is designed around the needs of elderly individuals and their caregiv
 
 ---
 
-## Core Features
+## Planned Product Features
 
 ### 1. Embedded Hardware and Telemetry
 
@@ -275,155 +275,21 @@ The methodology also supports iterative caregiver and user feedback and rapid te
 
 ## Development Roadmap
 
-The project is planned across six sprints:
+The [sprint status](docs/index.md#sprint-status) tracks delivery against the original six workstreams.
 
-| Sprint       | Focus                                                  |
-| ------------ | ------------------------------------------------------ |
-| **Sprint 1** | Brainstorming and SDLC Planning                        |
-| **Sprint 2** | Low-Fidelity Wireframing and Wokwi Hardware Simulation |
-| **Sprint 3** | Azure IoT Hub and MQTT Ingestion                       |
-| **Sprint 4** | ML Model and Gemini AI Backend                         |
-| **Sprint 5** | Caregiver Web Application                              |
-| **Sprint 6** | End-to-End Testing, CI/CD and Final Documentation      |
+## Run the development baseline
 
-Each sprint represents two project sessions according to the project Gantt chart.
-
----
-
-## Project Structure
-
-A suggested repository structure:
-
-```text
-JagSi/
-│
-├── hardware/
-│   ├── firmware/
-│   ├── sensors/
-│   └── wokwi/
-│
-├── backend/
-│   ├── app/
-│   ├── ml/
-│   └── ai/
-│
-├── frontend/
-│   ├── app/
-│   ├── components/
-│   └── public/
-│
-├── docs/
-│   ├── architecture/
-│   ├── diagrams/
-│   └── wireframes/
-│
-├── .github/
-│   └── workflows/
-│
-└── README.md
-```
-
----
-
-## Getting Started
-
-> **Note:** The worksheet defines the intended technology architecture but does not provide the final repository-specific installation commands or environment variables. The following section can be completed once the implementation structure is finalized.
-
-### Prerequisites
-
-Expected development requirements include:
-
-* Node.js
-* npm
-* Python
-* ESP32 development environment
-* Azure account
-* Gemini API credentials
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Backend
-
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-Environment variables should be configured according to the project's actual implementation.
-
----
-
-## CI/CD
-
-JagSi uses **GitHub Actions** for Continuous Integration.
-
-The workflow is triggered when changes are pushed or pull requests are made toward the `main` branch. It prepares an Ubuntu environment, checks out the repository, configures Node.js 18, installs dependencies using `npm ci`, and runs linting and automated tests.
-
-```text
-Push / Pull Request
-        │
-        ▼
-GitHub Actions
-        │
-        ▼
-Ubuntu Environment
-        │
-        ▼
-Node.js 18
-        │
-        ▼
-npm ci
-        │
-        ├── Lint
-        │
-        └── Tests
-              │
-              ▼
-        Validation Complete
-```
-
----
-
-## Project Documentation
-
-The project documentation includes:
-
-* Product goals
-* User requirements
-* Use Case Diagram
-* Entity Relationship Diagram
-* Low-Fidelity Wireframe
-* Functional Requirements
-* System Architecture
-* Project Breakdown
-* Gantt Chart
-* GitHub Project Management
-* GitHub Actions CI/CD
-
----
+The documented end-to-end development setup lives on the [Week 6 integration branch](https://github.com/akhnafyooga/JagSi/tree/b6278df5fbc6444be805a0cb0970a5b24665981f). Follow its [firmware setup](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/firmware/README.md) and [backend and dashboard setup](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/backend/README.md) for the MQTT development environment.
 
 ## Project Status
 
-**Development Status:** In Development
+**17 November 2026**
 
-Current project scope includes the integration of:
+| Workstream | Current evidence |
+| --- | --- |
+| Wearable and MQTT | Wokwi firmware publishes telemetry, alerts, and device state and receives commands. Heart rate and SpO2 are simulated in Wokwi. Physical sensor and casing validation remain open. |
+| Week 6 integration | PR #18 contains the 30-sample, 10 Hz motion windows, FastAPI MQTT bridge, SQLite storage, and live dashboard feed over server-sent events. The pull request is open. |
+| Fall detection | The original model scored 0.985 recall and 0.914 precision on held-out synthetic windows from its training generator. Firmware-shaped synthetic validation yielded 0.403 precision and flagged 96.5% of walking windows at threshold 0.11. Physical MPU6050 calibration and held-out evaluation remain open. |
+| Azure and Gemini | Week 7 reports local Event Grid replay, threshold-retuning tooling, and Bahasa Indonesia summaries and chat with a rule-based fallback. A published Week 7 commit, live Azure and Gemini checks, and an ESP32 target build are pending. |
 
-```text
-Hardware
-   ↓
-Cloud Telemetry
-   ↓
-Machine Learning
-   ↓
-AI Backend
-   ↓
-Caregiver Dashboard
-```
-
-JagSi is being developed iteratively following the project's Agile/Scrum development plan.
+See the [project portal](docs/index.md) for sprint status, issue links, and validation evidence.
