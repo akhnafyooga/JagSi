@@ -69,7 +69,12 @@ erDiagram
     }
 ```
 ## Gantt-Chart or Sprint Status
-```
+
+Sprint 1 is the original plan. Sprints 2 and 3 continue its two-week cadence;
+the block was cut off after the first Sprint 2 task (an incomplete end date
+stopped Mermaid from drawing the chart at all) and was completed in Week 8.
+
+```mermaid
 gantt
     title JagSi 3-Sprint SDLC Timeline
     dateFormat  YYYY-MM-DD
@@ -78,13 +83,34 @@ gantt
     section Sprint 1: Hardware & UI Setup
     README Setup & Product Descriptions (#14)  :done, task14, 2026-09-19, 2026-10-02
     Design UI/UX Wireframes & Component Kit (#11) :active, task11, 2026-09-19, 2026-10-02
-    Interface ESP32 on Wokwi (#5)              :task5, 2026-09-19, 2026-10-02
-    Program MQTT Pub/Sub Pipeline (#6)         :task6, 2026-09-19, 2026-10-02
+    Interface ESP32 on Wokwi (#5)              :done, task5, 2026-09-19, 2026-10-02
+    Program MQTT Pub/Sub Pipeline (#6)         :done, task6, 2026-09-19, 2026-10-02
     Assemble Casing & Wearable Prototype (#7)  :task7, 2026-09-19, 2026-10-02
 
     section Sprint 2: Cloud Infrastructure & AI
-    Deploy Azure IoT Hub & Event Grid (#8)     :task8, 2026-10-03, 2026-10
+    Deploy Azure IoT Hub & Event Grid (#8)     :active, task8, 2026-10-03, 2026-10-16
+    Develop Fall Classification ML Model (#9)  :active, task9, 2026-10-03, 2026-10-16
+    Integrate AI API for Health Digests (#10)  :done, task10, 2026-10-03, 2026-10-16
+
+    section Sprint 3: Caregiver Web App
+    Build Next.js Frontend Application (#12)   :active, task12, 2026-10-17, 2026-10-30
+    Real-time WebSocket Notifications (#13)    :done, task13, 2026-10-17, 2026-10-30
 ```
+
+### Status per issue (Week 8)
+
+| Issue | Status | Where it stands |
+|-------|--------|-----------------|
+| #5 ESP32 + sensors on Wokwi | Done | `firmware/jagsi-watch`, Week 6 |
+| #6 MQTT pub/sub pipeline | Done | `docs/mqtt-contract.md`, 22-check integration test |
+| #7 Casing & wearable prototype | Not started | needs the physical parts (`docs/hardware-bom.md`) |
+| #8 Azure IoT Hub & Event Grid | In progress | code and tests done (Week 7); waiting for the team's Azure subscription |
+| #9 Fall classification model | In progress | re-tune tooling done (Week 7); waiting for recordings from the physical MPU6050 |
+| #10 Gemini health digest | Done | Week 7; default model fixed to `gemini-3.8-flash` in Week 8 |
+| #11 UI/UX wireframes | In progress | low-fidelity wireframe below |
+| #12 Next.js frontend | In progress | Beranda and Darurat are live; Monitoring and Riwayat still show demo data |
+| #13 Real-time notifications | Done | Week 8: `/ws/alerts`, emergency screen, alarm, system notification |
+| #14 README & descriptions | Done | README updated to the real structure in Week 8 |
 
 ## UI/UX Design & Low-Fidelity Wireframe
 UI/UX Design & Low-Fidelity Wireframes

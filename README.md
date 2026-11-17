@@ -75,7 +75,7 @@ The system is designed around the needs of elderly individuals and their caregiv
         │  └───────────────────────┘  │
         └──────────────┬──────────────┘
                        │
-                       │ WebSocket / API
+                       │ WebSocket (alerts) / SSE (telemetry) / REST
                        ▼
         ┌─────────────────────────────┐
         │   3. CAREGIVER DASHBOARD    │
@@ -250,7 +250,7 @@ These user groups and their needs are defined in the project's SDLC design.
 | Machine Learning        | Fall Detection ML Model |
 | AI                      | Gemini API              |
 | Frontend                | Next.js                 |
-| Real-time Communication | WebSockets              |
+| Real-time Communication | WebSocket for emergency alerts, Server-Sent Events for telemetry |
 | UI Design               | Figma                   |
 
 The technology choices correspond to the architecture and project breakdown defined in the project worksheet.
@@ -292,101 +292,115 @@ Each sprint represents two project sessions according to the project Gantt chart
 
 ## Project Structure
 
-A suggested repository structure:
-
 ```text
 JagSi/
-│
-├── hardware/
-│   ├── firmware/
-│   ├── sensors/
-│   └── wokwi/
-│
-├── backend/
-│   ├── app/
-│   ├── ml/
-│   └── ai/
-│
-├── frontend/
-│   ├── app/
-│   ├── components/
-│   └── public/
-│
-├── docs/
-│   ├── architecture/
-│   ├── diagrams/
-│   └── wireframes/
-│
-├── .github/
-│   └── workflows/
-│
-└── README.md
+├── firmware/                 ESP32 watch (Arduino C++)
+│   ├── jagsi-watch/          sketch.ino, Wokwi diagram.json, Azure transport
+│   └── test/                 host tests and a type-check of the sketch
+├── backend/                  FastAPI service, see backend/README.md
+│   ├── app/                  MQTT / Event Grid bridge, API, SSE, alert WebSocket,
+│   │                         Gemini summary, SQLite store
+│   ├── ml/                   fall classification model and re-tuning
+│   └── scripts/              dev broker and end-to-end checks
+├── frontend/                 Next.js caregiver dashboard (Bahasa Indonesia)
+│   ├── app/                  pages: Beranda, Monitoring, Riwayat, Profil, Darurat
+│   ├── components/           UI, including the emergency alert screen
+│   └── lib/                  API client, live data hooks, alarm
+├── infra/azure/deploy.sh     creates the IoT Hub, device and Event Grid subscription
+├── tools/                    fake device and MQTT monitor for testing without hardware
+├── tests/                    payload schema and pipeline tests for the firmware contract
+├── docs/                     GitHub Pages site, MQTT contract, Azure setup,
+│                             hardware BOM, weekly validation results
+└── .github/workflows/        CI
 ```
 
 ---
 
 ## Getting Started
 
-> **Note:** The worksheet defines the intended technology architecture but does not provide the final repository-specific installation commands or environment variables. The following section can be completed once the implementation structure is finalized.
+You need Python 3.12, Node.js 20 and, for the device, either [Wokwi](https://wokwi.com)
+or the fake device in `tools/`. Azure and a Gemini key are optional for local work.
 
-### Prerequisites
-
-Expected development requirements include:
-
-* Node.js
-* npm
-* Python
-* ESP32 development environment
-* Azure account
-* Gemini API credentials
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Backend
+### 1. Local MQTT broker
 
 ```bash
 cd backend
-pip install -r requirements.txt
+pip install -r requirements-dev.txt amqtt
+python3 scripts/dev_broker.py --port 1883
 ```
 
-Environment variables should be configured according to the project's actual implementation.
+### 2. Backend
+
+```bash
+cd backend
+JAGSI_MQTT_HOST=127.0.0.1 uvicorn app.main:app --reload --port 8000
+```
+
+Optional: `GEMINI_API_KEY=...` for AI summaries (without it, a rule-based summary is
+shown and labelled as such). All settings are listed in `backend/README.md`.
+
+### 3. Dashboard
+
+```bash
+cd frontend
+cp .env.local.example .env.local      # NEXT_PUBLIC_JAGSI_API=http://localhost:8000
+npm ci
+npm run dev                           # http://localhost:3000
+```
+
+On the first visit, press **Aktifkan alarm darurat** once. Browsers only allow sound
+and notifications after a click.
+
+### 4. A device
+
+Either load `firmware/jagsi-watch` in Wokwi (see `firmware/README.md`), or:
+
+```bash
+python3 tools/fake_device.py --host 127.0.0.1 --device-id jagsi-watch-01 --fall-at 5
+```
+
+A few seconds later the dashboard shows the emergency screen and rings until someone
+presses **Saya tangani**.
+
+### Azure IoT Hub
+
+Run `infra/azure/deploy.sh` and follow `docs/azure-setup.md`; then start the backend
+with `JAGSI_INGEST=azure`.
+
+---
+
+## Real-time Notifications
+
+Emergencies reach the caregiver without polling:
+
+```text
+watch --MQTT/IoT Hub--> backend --stores alert--> WS /ws/alerts --> every open dashboard
+                                                       │                 │
+watch <--ack_alert------ backend <--"Saya tangani"-----┘   full-screen alert, alarm,
+                                                           system notification
+```
+
+- A fall or SOS opens a full-screen alert on whatever page is open, with an alarm
+  tone and, if the tab is in the background, a system notification.
+- The alert stays until a caregiver presses **Saya tangani**; muting only stops the
+  sound. The acknowledgement closes it on every other open dashboard and stops the
+  watch from re-sending.
+- A dashboard that reconnects receives every alert nobody has handled yet.
+- Telemetry keeps using Server-Sent Events (`/api/stream`), which only needs one
+  direction.
 
 ---
 
 ## CI/CD
 
-JagSi uses **GitHub Actions** for Continuous Integration.
+GitHub Actions (`.github/workflows/main.yml`) runs on every push to `main` and
+`feat/**` and on every pull request:
 
-The workflow is triggered when changes are pushed or pull requests are made toward the `main` branch. It prepares an Ubuntu environment, checks out the repository, configures Node.js 18, installs dependencies using `npm ci`, and runs linting and automated tests.
-
-```text
-Push / Pull Request
-        │
-        ▼
-GitHub Actions
-        │
-        ▼
-Ubuntu Environment
-        │
-        ▼
-Node.js 18
-        │
-        ▼
-npm ci
-        │
-        ├── Lint
-        │
-        └── Tests
-              │
-              ▼
-        Validation Complete
-```
+| Job | What it runs |
+|-----|--------------|
+| Frontend | `npm ci`, lint, type check, Vitest, production build (Node.js 20) |
+| Backend | pytest, the MQTT pipeline check, the Event Grid check, the real-time alert check, and a non-blocking model validation (Python 3.12) |
+| Firmware | motion-window and direct-method tests in C++, and a type-check of `sketch.ino` for both transports |
 
 ---
 
@@ -410,20 +424,16 @@ The project documentation includes:
 
 ## Project Status
 
-**Development Status:** In Development
+**Development Status:** In Development (Week 8)
 
-Current project scope includes the integration of:
+| Sprint | Focus | Status |
+|--------|-------|--------|
+| Sprint 1 | Brainstorming and SDLC Planning | Done |
+| Sprint 2 | Low-Fidelity Wireframing and Wokwi Hardware Simulation | Done |
+| Sprint 3 | Azure IoT Hub and MQTT Ingestion | MQTT done; Azure code done, deployment pending |
+| Sprint 4 | ML Model and Gemini AI Backend | Gemini done; model threshold waits for real sensor recordings |
+| Sprint 5 | Caregiver Web Application | In progress: live vitals, AI summary, emergency alerts done |
+| Sprint 6 | End-to-End Testing, CI/CD and Final Documentation | CI in place |
 
-```text
-Hardware
-   ↓
-Cloud Telemetry
-   ↓
-Machine Learning
-   ↓
-AI Backend
-   ↓
-Caregiver Dashboard
-```
-
-JagSi is being developed iteratively following the project's Agile/Scrum development plan.
+Progress per week is documented in `docs/week6-validation.md`,
+`docs/week7-validation.md` and `docs/week8-validation.md`.
