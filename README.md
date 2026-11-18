@@ -8,6 +8,10 @@ The system combines **embedded hardware, cloud telemetry, machine learning, and 
 
 ---
 
+## Simulation delivery plan
+
+The [Wokwi team requirements](docs/wokwi-team-requirements.md) define the selected demonstration using simulated ESP32 inputs, JagSi-trained fall and vital-trend models, Supabase persistence and the caregiver dashboard. Akhnaf owns [models and firmware](https://github.com/akhnafyooga/JagSi/issues/20), Rafi owns [cloud and inference integration](https://github.com/akhnafyooga/JagSi/issues/21), and Akmal owns [dashboard and acceptance](https://github.com/akhnafyooga/JagSi/issues/22). The new implementation work is open.
+
 ## Team
 
 | Role             | Name                     | Student ID |

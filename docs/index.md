@@ -4,6 +4,16 @@
 
 ---
 
+## Wokwi delivery alignment
+
+The [implementation and team requirements](wokwi-team-requirements.md) specify the current simulation demonstration. This work uses JagSi-trained models and Supabase cloud persistence.
+
+| Work package | Owner | Complexity | State |
+| --- | --- | --- | --- |
+| [#20 Wokwi and owned ML models](https://github.com/akhnafyooga/JagSi/issues/20) | Akhnaf | L4 high | Open |
+| [#21 Cloud and backend inference](https://github.com/akhnafyooga/JagSi/issues/21) | Rafi | L4 high | Open |
+| [#22 Dashboard and acceptance](https://github.com/akhnafyooga/JagSi/issues/22) | Akmal | L3 medium | Open |
+
 ## Product Goals
 To build an accessible, cloud-connected wearable health-monitoring ecosystem that provides real-time vital sign tracking, automated fall detection, emergency alerts, and AI-driven health risk summaries for elderly individuals and their primary caregivers.
 
