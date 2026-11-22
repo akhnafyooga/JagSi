@@ -1,0 +1,95 @@
+{
+  "n_train_subjects": 36,
+  "n_val_subjects": 12,
+  "n_test_subjects": 12,
+  "min_precision": 0.92,
+  "threshold": 0.11,
+  "n_estimators": 300,
+  "feature_names": [
+    "smv_mean",
+    "smv_max",
+    "smv_min",
+    "smv_std",
+    "smv_peak_to_peak",
+    "jerk_max",
+    "jerk_mean",
+    "pitch_mean",
+    "pitch_range",
+    "roll_mean",
+    "roll_range",
+    "tilt_change",
+    "gyro_max",
+    "gyro_mean",
+    "free_fall_min",
+    "free_fall_duration",
+    "impact_duration",
+    "post_std"
+  ],
+  "train": {
+    "n_samples": 4612,
+    "accuracy": 0.9958803122289679,
+    "precision": 0.9900157645822386,
+    "recall": 1.0,
+    "f1": 0.9949828360179561,
+    "roc_auc": 1.0,
+    "confusion_matrix": [
+      [
+        2709,
+        19
+      ],
+      [
+        0,
+        1884
+      ]
+    ],
+    "class_balance": {
+      "non_fall": 2728,
+      "fall": 1884
+    }
+  },
+  "val": {
+    "n_samples": 1549,
+    "accuracy": 0.9586830213040671,
+    "precision": 0.9201807228915663,
+    "recall": 0.9823151125401929,
+    "f1": 0.9502332814930016,
+    "roc_auc": 0.9953667571983059,
+    "confusion_matrix": [
+      [
+        874,
+        53
+      ],
+      [
+        11,
+        611
+      ]
+    ],
+    "class_balance": {
+      "non_fall": 927,
+      "fall": 622
+    }
+  },
+  "test": {
+    "n_samples": 1524,
+    "accuracy": 0.9566929133858267,
+    "precision": 0.9144144144144144,
+    "recall": 0.9854368932038835,
+    "f1": 0.9485981308411215,
+    "roc_auc": 0.996181515534695,
+    "confusion_matrix": [
+      [
+        849,
+        57
+      ],
+      [
+        9,
+        609
+      ]
+    ],
+    "class_balance": {
+      "non_fall": 906,
+      "fall": 618
+    }
+  },
+  "classification_report": "              precision    recall  f1-score   support\n\n    non_fall       0.99      0.94      0.96       906\n        fall       0.91      0.99      0.95       618\n\n    accuracy                           0.96      1524\n   macro avg       0.95      0.96      0.96      1524\nweighted avg       0.96      0.96      0.96      1524\n"
+}

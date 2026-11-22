@@ -1,0 +1,46 @@
+# python -m pytest -v demo/tests app/tests/test_input_validation.py  (22 Nov 2026)
+demo/tests/test_cloud.py::test_schema_can_be_run_twice PASSED
+demo/tests/test_cloud.py::test_mirror_copies_rows_and_advances_cursor PASSED
+demo/tests/test_cloud.py::test_replay_adds_no_duplicates PASSED
+demo/tests/test_cloud.py::test_restart_keeps_history_and_source PASSED
+demo/tests/test_cloud.py::test_backlog_catches_up_in_batches_after_outage PASSED
+demo/tests/test_cloud.py::test_failed_batch_rolls_back_cursor_and_rows PASSED
+demo/tests/test_cloud.py::test_alert_status_change_reaches_cloud PASSED
+demo/tests/test_cloud.py::test_source_id_collision_is_refused PASSED
+demo/tests/test_cloud.py::test_replaced_sqlite_file_is_refused PASSED
+demo/tests/test_cloud.py::test_two_sources_stay_separate PASSED
+demo/tests/test_cloud.py::test_second_worker_for_same_source_waits PASSED
+demo/tests/test_cloud.py::test_missing_sqlite_is_reported PASSED
+demo/tests/test_cloud.py::test_worker_exits_on_collision PASSED
+demo/tests/test_cloud.py::test_insufficient_data PASSED
+demo/tests/test_cloud.py::test_stale_window_gives_no_prediction PASSED
+demo/tests/test_cloud.py::test_irregular_sampling_gives_no_prediction PASSED
+demo/tests/test_cloud.py::test_missing_values_give_no_prediction PASSED
+demo/tests/test_cloud.py::test_stable_window_is_traceable PASSED
+demo/tests/test_cloud.py::test_rising_heart_rate_is_recognised PASSED
+demo/tests/test_cloud.py::test_progress_endpoint_stores_analysis PASSED
+demo/tests/test_cloud.py::test_progress_reports_insufficient_data_as_200 PASSED
+demo/tests/test_cloud.py::test_missing_model_is_503 PASSED
+demo/tests/test_cloud.py::test_wrong_feature_contract_is_503 PASSED
+demo/tests/test_cloud.py::test_unreachable_cloud_is_503 PASSED
+demo/tests/test_cloud.py::test_cloud_not_configured_is_503 PASSED
+demo/tests/test_cloud.py::test_unknown_device_is_404 PASSED
+demo/tests/test_cloud.py::test_cloud_history_and_status PASSED
+demo/tests/test_secrets.py::test_env_file_is_gitignored PASSED
+demo/tests/test_secrets.py::test_example_holds_placeholders_only PASSED
+demo/tests/test_secrets.py::test_frontend_never_references_cloud_credentials PASSED
+demo/tests/test_secrets.py::test_cloud_module_never_logs_the_dsn PASSED
+app/tests/test_input_validation.py::test_non_finite_samples_are_rejected[nan] PASSED
+app/tests/test_input_validation.py::test_non_finite_samples_are_rejected[inf] PASSED
+app/tests/test_input_validation.py::test_non_finite_samples_are_rejected[-inf] PASSED
+app/tests/test_input_validation.py::test_nan_from_json_text_is_rejected PASSED
+app/tests/test_input_validation.py::test_boolean_sample_is_rejected PASSED
+app/tests/test_input_validation.py::test_device_id_must_match_topic PASSED
+app/tests/test_input_validation.py::test_matching_device_is_dispatched PASSED
+app/tests/test_input_validation.py::test_restricted_bridge_drops_other_devices PASSED
+app/tests/test_input_validation.py::test_oversized_payload_is_dropped_before_parsing PASSED
+app/tests/test_input_validation.py::test_refused_connection_is_visible PASSED
+============================== 41 passed in 3.99s ==============================
+
+# python -m pytest -q  (whole backend suite)
+165 passed in 23.61s
