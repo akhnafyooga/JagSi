@@ -53,6 +53,19 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    # Week 9 (#21): a throwaway PostgreSQL stands in for Supabase, so the cloud
+    # mirror's transactions, upserts and locks are tested for real, not mocked.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      JAGSI_TEST_PG_DSN: postgresql://postgres:postgres@127.0.0.1:5432/postgres
     steps:
       - uses: actions/checkout@v4
 
@@ -60,10 +73,12 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: backend/requirements-dev.txt
+          cache-dependency-path: |
+            backend/requirements-dev.txt
+            backend/requirements-demo.txt
 
       - name: Install dependencies
-        run: pip install -r requirements-dev.txt
+        run: pip install -r requirements-dev.txt -r requirements-demo.txt
 
       - name: Test
         run: python -m pytest -q
@@ -80,6 +95,12 @@ jobs:
       # the caregiver's acknowledgement going back to the watch.
       - name: Real-time alert check (WebSocket)
         run: python scripts/alert_ws_check.py
+
+      # Week 9 (issue #21): MQTT -> SQLite -> mirror worker -> PostgreSQL ->
+      # trend inference, at the firmware's real 2 s cadence (about 3 minutes),
+      # including a cloud outage, a worker restart and a stale feed.
+      - name: Cloud mirror and trend inference check
+        run: python scripts/cloud_check.py
 
       # Proves the model still behaves on windows shaped the way the device sends
       # them. It exits non-zero when an issue #9 target is missed, so it is kept

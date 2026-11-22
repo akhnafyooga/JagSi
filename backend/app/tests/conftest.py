@@ -13,3 +13,5 @@ from pathlib import Path
 _TMP = Path(tempfile.mkdtemp(prefix="jagsi-test-"))
 os.environ.setdefault("JAGSI_DB_PATH", str(_TMP / "test.db"))
 os.environ.setdefault("JAGSI_MQTT_HOST", "127.0.0.1")
+# app.main imports demo.cloud, which would otherwise load a real backend/.env.demo.
+os.environ.setdefault("JAGSI_SKIP_ENV_FILE", "1")

@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import threading
 from asyncio import AbstractEventLoop
 from datetime import datetime, timedelta, timezone
@@ -83,10 +84,16 @@ def parse_window(msg: Dict[str, Any]) -> List[Any]:
     for i, row in enumerate(rows):
         if not isinstance(row, (list, tuple)) or len(row) != 6:
             raise WindowRejected(f"row {i} must be [ax, ay, az, gx, gy, gz]")
+        # bool is a subclass of int, so float(True) would quietly become 1.0 g.
+        if any(isinstance(x, bool) for x in row):
+            raise WindowRejected(f"row {i} holds a boolean, not a number")
         try:
             ax, ay, az, gx, gy, gz = (float(x) for x in row)
         except (TypeError, ValueError) as exc:
             raise WindowRejected(f"row {i} holds a non-numeric value") from exc
+        # json.loads accepts NaN and Infinity; the model would score them anyway.
+        if not all(math.isfinite(v) for v in (ax, ay, az, gx, gy, gz)):
+            raise WindowRejected(f"row {i} holds NaN or Infinity")
         samples.append(AccelSample(ax=ax, ay=ay, az=az, gx=gx, gy=gy, gz=gz))
     return samples
 
@@ -131,6 +138,9 @@ class Bridge:
             "last_reject_reason": None,
             "classifier_loaded": False,
             "threshold": None,
+            "messages_rejected": 0,
+            "last_message_reject_reason": None,
+            "last_connect_error": None,
         }
 
         self.client = mqtt.Client(
@@ -202,9 +212,13 @@ class Bridge:
     # -- MQTT callbacks ------------------------------------------------------
     def _on_connect(self, client, userdata, flags, reason_code, properties=None):
         if reason_code != 0:
+            # Visible in /api/health, so a wrong broker or password is not just
+            # a silent "connected: false".
+            self.stats["last_connect_error"] = str(reason_code)
             log.error("connect refused: %s", reason_code)
             return
         self.stats["connected"] = True
+        self.stats["last_connect_error"] = None
         # Deliberately not the documented 'jagsi/abal/v1/+/#' wildcard: it also
         # matches the cmd topic this bridge publishes to, so the broker would
         # hand every ack_alert straight back to us.
@@ -216,17 +230,40 @@ class Bridge:
         self.stats["connected"] = False
         log.warning("disconnected (%s), paho will retry", reason_code)
 
+    def _reject_message(self, topic: str, reason: str) -> None:
+        self.stats["messages_rejected"] += 1
+        self.stats["last_message_reject_reason"] = reason
+        log.warning("ignoring message on %s: %s", topic, reason)
+
     def _on_message(self, client, userdata, message: mqtt.MQTTMessage) -> None:
+        # The public broker cannot authenticate publishers, so anything arriving
+        # here is checked against the topic it came on before it is stored.
+        limit = self.settings.max_payload_bytes
+        if len(message.payload) > limit:
+            self._reject_message(message.topic, f"payload is {len(message.payload)} bytes, limit {limit}")
+            return
         try:
             payload = json.loads(message.payload.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            log.warning("ignoring unparseable message on %s: %s", message.topic, exc)
+            self._reject_message(message.topic, f"unparseable JSON ({exc})")
             return
         if not isinstance(payload, dict) or "device_id" not in payload:
-            log.warning("ignoring message without device_id on %s", message.topic)
+            self._reject_message(message.topic, "no device_id")
             return
 
-        suffix = message.topic.rsplit("/", 1)[-1]
+        # topic = <topic_base><device_id>/<suffix>
+        rest = message.topic[len(self.settings.topic_base):] if message.topic.startswith(
+            self.settings.topic_base) else message.topic
+        topic_device, _, suffix = rest.rpartition("/")
+        if payload["device_id"] != topic_device:
+            self._reject_message(
+                message.topic,
+                f"device_id {payload['device_id']!r} does not match topic device {topic_device!r}",
+            )
+            return
+        if self.settings.restrict_device and topic_device != self.settings.device_id:
+            self._reject_message(message.topic, f"unexpected device {topic_device!r}")
+            return
         try:
             self.dispatch(suffix, payload)
         except Exception:

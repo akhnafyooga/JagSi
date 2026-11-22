@@ -25,6 +25,11 @@ Week 7
 Week 8
     WS   /ws/alerts                              emergency alerts pushed instantly, and
                                                  the caregiver's acknowledgement sent back (#13)
+
+Week 9 (issue #21, Supabase cloud and trend inference, see demo/cloud.py)
+    GET  /api/devices/{id}/progress              trend-model result over the last 60 cloud readings
+    GET  /api/devices/{id}/cloud-history         readings as stored in Supabase
+    GET  /api/cloud/status                       cloud row counts and the mirror cursor
 """
 
 from __future__ import annotations
@@ -49,6 +54,7 @@ from .realtime import ALERT_EVENTS, Hub
 from .recorder import SUGGESTED_LABELS, MotionRecorder, RecordingError
 from .store import Store, utcnow
 from .vitals import telemetry_to_vitals
+from demo.cloud import router as cloud_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 log = logging.getLogger("jagsi.api")
@@ -104,6 +110,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="JagSi API", version="0.2.0", lifespan=lifespan)
+app.include_router(cloud_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,

@@ -1,0 +1,4 @@
+# Extra packages for the Wokwi + Supabase demo (issue #21), on top of
+# requirements-dev.txt. Versions are the ones the tests were run with.
+psycopg[binary]==3.3.9
+python-dotenv==1.2.4

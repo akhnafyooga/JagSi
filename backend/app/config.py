@@ -32,6 +32,13 @@ class Settings:
     topic_base: str = os.getenv("JAGSI_TOPIC_BASE", "jagsi/abal/v1/")
     device_id: str = os.getenv("JAGSI_DEVICE_ID", "jagsi-watch-01")
 
+    # Week 9 (#21): with the public broker anyone can publish on our prefix.
+    # restrict_device drops messages for any device other than device_id, and
+    # max_payload_bytes drops oversized messages before JSON parsing. A full
+    # motion window is about 2 KB.
+    restrict_device: bool = _env_bool("JAGSI_RESTRICT_DEVICE", False)
+    max_payload_bytes: int = int(os.getenv("JAGSI_MAX_PAYLOAD_BYTES", "16384"))
+
     db_path: str = os.getenv("JAGSI_DB_PATH", str(BACKEND_DIR / "data" / "jagsi.db"))
 
     model_path: str = os.getenv(

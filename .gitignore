@@ -46,3 +46,6 @@ firmware/jagsi-watch/azure_config.h
 infra/azure/out/
 backend/.env
 *.key.pem
+
+# Week 9 (#21): Supabase credentials stay on the backend machine only
+backend/.env.demo
