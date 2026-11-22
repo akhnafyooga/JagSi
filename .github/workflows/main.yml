@@ -1,33 +1,89 @@
 name: CI/CD Pipeline
 
+# Previously every step was gated on hashFiles('package.json'), which looks at the
+# repository root. package.json lives in frontend/, so the condition was always
+# false and the job passed without running lint or a single test. Each job below
+# now names its own working directory.
+
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  build-and-test:
+  frontend:
+    name: Frontend (lint, types, tests)
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: frontend
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js Environment
-        if: ${{ hashFiles('package.json') != '' }}
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install Dependencies
-        if: ${{ hashFiles('package.json') != '' }}
+      # npm install, not npm ci: package-lock.json is currently out of sync with
+      # package.json (missing @emnapi/runtime). Switch this back to `npm ci` once
+      # the lockfile has been regenerated and committed.
+      - name: Install dependencies
         run: npm install
 
-      - name: Run Linter & Syntax Check
-        if: ${{ hashFiles('package.json') != '' }}
-        run: npm run lint --if-present
+      - name: Lint
+        run: npm run lint
 
-      - name: Run Test Suites
-        if: ${{ hashFiles('package.json') != '' }}
-        run: npm test --if-present
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  backend:
+    name: Backend (ML and pipeline tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Test
+        run: python -m pytest -q
+
+      # Proves the model still behaves on windows shaped the way the device sends
+      # them. It exits non-zero when an issue #9 target is missed, so it is kept
+      # non-blocking until the decision threshold is re-tuned (docs/week6-validation.md).
+      - name: Validate the classifier on device-shaped windows
+        continue-on-error: true
+        run: python scripts/validate_on_device_windows.py --windows 100
+
+  firmware:
+    name: Firmware (motion window unit tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # motion_window.h is deliberately free of Arduino dependencies so the ring
+      # buffer can be tested here without a simulator or a board.
+      - name: Build and run the motion window tests
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror \
+            -I firmware/jagsi-watch \
+            firmware/test/test_motion_window.cpp -o test_motion_window
+          ./test_motion_window
