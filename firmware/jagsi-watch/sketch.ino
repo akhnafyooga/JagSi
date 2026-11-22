@@ -1,6 +1,19 @@
 /*
- * JagSi (Jaga Lansia) - Wearable firmware, Sprint 1
- * Issue #6: Program MQTT pub/sub data pipeline
+ * JagSi (Jaga Lansia) - Wearable firmware, end-product Wokwi build (v0.2.0)
+ * Issues #6, #20 (R01-R03) and docs/wokwi-team-requirements.md section 6
+ *
+ * Changes since 0.1.0 (Week 6 baseline b6278df):
+ *   - Shared demo topic prefix (TOPIC_BASE) instead of the old public prefix.
+ *   - "dropped" now counts every sampling gap still inside the current 30-sample
+ *     window, so a gapped window stays rejected until the gap ages out.
+ *   - Drift-free 10 Hz scheduler; a stall is recorded as missed samples.
+ *   - DS18B20 read by cached address after an async conversion (no blocking
+ *     bus search inside the 100 ms loop).
+ *   - Motion values clamped to the sensor range so the JSON size has a known
+ *     maximum; the largest motion message is tracked and printed.
+ *   - Serial health line every 10 s (loop time, windows, gaps, payload size).
+ *   - Optional demo scenarios typed in the Serial Monitor (see "help").
+ *     The MQTT payload format is unchanged (docs/mqtt-contract.md).
  *
  * What this does:
  *   - Reads the sensors (10 Hz):
@@ -77,8 +90,15 @@
 #else
 #define MQTT_HOST       "broker.hivemq.com"   // public test broker (dummy data only!)
 #define MQTT_PORT       1883
+<<<<<<< HEAD
 #endif
 #define TOPIC_BASE      "jagsi/abal/v1/"
+=======
+// Shared demo prefix (wokwi-team-requirements.md section 4). Keep the trailing
+// slash. The backend must use exactly the same value in JAGSI_TOPIC_BASE.
+// If the team agrees on another token, change it here and in the backend only.
+#define TOPIC_BASE      "jagsi/abal/demo-wflx1f/v1/"
+>>>>>>> origin/main
 
 // Pins
 #define PIN_I2C_SDA     21
@@ -121,6 +141,17 @@
 #define SPO2_MIN 80.0f
 #define SPO2_MAX 100.0f
 
+// Sensor ranges set in setupSensors(). Values are clamped to these before they
+// are serialized, so the motion JSON can never grow past its worst case.
+#define ACCEL_RANGE_G     8.0f
+#define GYRO_RANGE_DPS    500.0f
+
+// Demo scenarios (Serial Monitor). Shapes follow the trend model's training
+// generator in backend/demo/train_trends.py: a linear change over 60 telemetry
+// readings (2 minutes at the 2 s interval), then hold.
+#define SCENARIO_RAMP_MS  120000UL
+#define HEALTH_LOG_MS     10000UL
+
 // ------------------------------------------------------------------
 // Global objects and state
 // ------------------------------------------------------------------
@@ -134,12 +165,20 @@ Adafruit_MPU6050  mpu;
 OneWire           oneWire(PIN_ONEWIRE);
 DallasTemperature tempSensor(&oneWire);
 
+<<<<<<< HEAD
 // IoT Hub topics carry a property bag, so they are longer than the Week 6 ones.
 char topicTelemetry[128];
 char topicEvent[128];
 char topicStatus[128];
 char topicCmd[128];
 char topicMotion[128];
+=======
+char topicTelemetry[96];
+char topicEvent[96];
+char topicStatus[96];
+char topicCmd[96];
+char topicMotion[96];
+>>>>>>> origin/main
 char clientId[40];
 #if JAGSI_AZURE
 char mqttUsername[128];
@@ -148,6 +187,7 @@ char bootId[9];            // random per boot, makes event_id unique
 
 bool mpuOk = false;
 bool tempOk = false;
+DeviceAddress tempAddr;            // cached DS18B20 ROM address (no bus search per read)
 
 // Latest sensor values
 struct Vitals {
@@ -165,10 +205,24 @@ struct Vitals {
 // Implementation and host-side unit tests live in motion_window.h.
 MotionWindow<MOTION_WINDOW_SIZE> motionWindow;
 uint32_t motionSeq = 0;
-uint16_t motionDropped = 0;           // late samples since the last window
 unsigned long lastMotionSampleMs = 0; // uptime of the newest sample
 unsigned long lastMotionPublishMs = 0;
 bool motionEnabled = true;            // "set_motion" can turn this off
+
+// Health counters, printed every HEALTH_LOG_MS
+uint32_t statWindowsSent = 0;         // motion windows published
+uint32_t statWindowsGapped = 0;       // of those, how many carried dropped > 0
+uint32_t statMissedSamples = 0;       // total 10 Hz samples never taken
+size_t   statMaxMotionBytes = 0;      // largest motion JSON so far
+unsigned long statMaxLoopMs = 0;      // longest single loop() pass since last log
+unsigned long lastHealthMs = 0;
+
+// Demo scenario state (Serial Monitor command "scenario ...")
+enum Scenario { SC_OFF, SC_STABLE, SC_RISING_HR, SC_FALLING_SPO2, SC_RISING_TEMP };
+Scenario scenario = SC_OFF;
+unsigned long scenarioStartMs = 0;
+char serialLine[48];
+uint8_t serialLen = 0;
 
 unsigned long telemetryIntervalMs = DEFAULT_TELEMETRY_MS;
 unsigned long lastSampleMs = 0, lastTempMs = 0, lastTelemetryMs = 0;
@@ -205,6 +259,15 @@ double round2(float x) { return (double)lroundf(x * 100.0f) / 100.0; }
 // Gyroscope only needs 0.1 deg/s; one decimal keeps the motion window payload
 // inside the MQTT buffer.
 double round1(float x) { return (double)lroundf(x * 10.0f) / 10.0; }
+
+float clampf(float x, float lim) { return x > lim ? lim : (x < -lim ? -lim : x); }
+
+// Small symmetric noise for scenario values, roughly N(0, sigma).
+float noise(float sigma) {
+  float u = 0;
+  for (int i = 0; i < 4; i++) u += (float)(esp_random() & 0xFFFF) / 65535.0f;
+  return (u - 2.0f) * 1.73f * sigma;   // sum of 4 uniforms, scaled to ~sigma
+}
 
 // Writes "2026-09-28T12:00:00Z" into buf. Returns false if time is not synced yet.
 bool isoTimeNow(char *buf, size_t len) {
@@ -254,11 +317,12 @@ void setupSensors() {
   }
 
   tempSensor.begin();
-  tempOk = tempSensor.getDeviceCount() > 0;
+  tempOk = tempSensor.getDeviceCount() > 0 && tempSensor.getAddress(tempAddr, 0);
   tempSensor.setWaitForConversion(false);   // do not block the loop for 750 ms
   if (tempOk) {
-    tempSensor.requestTemperatures();
-    Serial.println(F("[SENSOR] DS18B20 OK"));
+    tempSensor.setResolution(tempAddr, 12);
+    tempSensor.requestTemperaturesByAddress(tempAddr);
+    Serial.println(F("[SENSOR] DS18B20 OK (async, cached address)"));
   } else {
     Serial.println(F("[SENSOR] DS18B20 NOT FOUND - body_temperature will be null"));
   }
@@ -271,21 +335,40 @@ void setupSensors() {
 
 void readSimulatedVitals() {
   // TODO (real hardware): replace with MAX30102 readings.
+  v.battery = map(analogRead(PIN_POT_BATT), 0, 4095, 0, 100);
+  if (scenario != SC_OFF) return;           // scenario owns HR, SpO2 and temperature
   v.heartRate = map(analogRead(PIN_POT_HR), 0, 4095, HR_MIN, HR_MAX);
   v.spo2 = SPO2_MIN + (SPO2_MAX - SPO2_MIN) * analogRead(PIN_POT_SPO2) / 4095.0f;
-  v.battery = map(analogRead(PIN_POT_BATT), 0, 4095, 0, 100);
+}
+
+// Scenario values: base 75 bpm / 98 % / 36.6 C, one channel ramps linearly over
+// SCENARIO_RAMP_MS and then holds. Called at the telemetry cadence, so every
+// published reading gets its own noise sample.
+void applyScenario() {
+  if (scenario == SC_OFF) return;
+  float k = (float)(millis() - scenarioStartMs) / (float)SCENARIO_RAMP_MS;
+  if (k > 1.0f) k = 1.0f;
+  float hr = 75.0f, spo2 = 98.0f, temp = 36.6f;
+  if (scenario == SC_RISING_HR)    hr   += 25.0f * k;
+  if (scenario == SC_FALLING_SPO2) spo2 -= 5.0f * k;
+  if (scenario == SC_RISING_TEMP)  temp += 1.2f * k;
+  v.heartRate = (int)lroundf(hr + noise(1.6f));
+  v.spo2 = spo2 + noise(0.18f);
+  if (v.spo2 > 100.0f) v.spo2 = 100.0f;
+  v.bodyTemp = temp + noise(0.04f);
 }
 
 void readImu() {
   if (!mpuOk) return;
   sensors_event_t a, g, t;
   mpu.getEvent(&a, &g, &t);
-  v.ax = a.acceleration.x / SENSORS_GRAVITY_STANDARD;   // m/s^2 -> g
-  v.ay = a.acceleration.y / SENSORS_GRAVITY_STANDARD;
-  v.az = a.acceleration.z / SENSORS_GRAVITY_STANDARD;
-  v.gx = g.gyro.x * SENSORS_RADS_TO_DPS;                // rad/s -> deg/s
-  v.gy = g.gyro.y * SENSORS_RADS_TO_DPS;
-  v.gz = g.gyro.z * SENSORS_RADS_TO_DPS;
+  // m/s^2 -> g and rad/s -> deg/s, clamped to the configured sensor range
+  v.ax = clampf(a.acceleration.x / SENSORS_GRAVITY_STANDARD, ACCEL_RANGE_G);
+  v.ay = clampf(a.acceleration.y / SENSORS_GRAVITY_STANDARD, ACCEL_RANGE_G);
+  v.az = clampf(a.acceleration.z / SENSORS_GRAVITY_STANDARD, ACCEL_RANGE_G);
+  v.gx = clampf(g.gyro.x * SENSORS_RADS_TO_DPS, GYRO_RANGE_DPS);
+  v.gy = clampf(g.gyro.y * SENSORS_RADS_TO_DPS, GYRO_RANGE_DPS);
+  v.gz = clampf(g.gyro.z * SENSORS_RADS_TO_DPS, GYRO_RANGE_DPS);
   float mag = sqrtf(v.ax * v.ax + v.ay * v.ay + v.az * v.az);
   if (mag > v.peakG) v.peakG = mag;
 }
@@ -297,13 +380,16 @@ void pushMotionSample() {
   if (!mpuOk) return;
 
   unsigned long now = millis();
+  uint16_t missed = 0;
   if (lastMotionSampleMs != 0) {
     unsigned long gap = now - lastMotionSampleMs;
     if (gap > MOTION_LATE_SAMPLE_MS) {
       // The loop was held up (reconnect, blocking sensor read). Count the
-      // samples we never took, so the backend can reject a window whose
-      // spacing is no longer a clean 10 Hz.
-      motionDropped += (uint16_t)((gap - SENSOR_SAMPLE_MS) / SENSOR_SAMPLE_MS);
+      // samples we never took. The count is stored with this sample, so every
+      // window that still contains this gap reports it (droppedInWindow()).
+      unsigned long n = (gap - SENSOR_SAMPLE_MS / 2) / SENSOR_SAMPLE_MS;   // rounded
+      missed = n > 0xFFFF ? 0xFFFF : (uint16_t)n;
+      statMissedSamples += missed;
     }
   }
   lastMotionSampleMs = now;
@@ -311,7 +397,7 @@ void pushMotionSample() {
   MotionSample m;
   m.ax = v.ax; m.ay = v.ay; m.az = v.az;
   m.gx = v.gx; m.gy = v.gy; m.gz = v.gz;
-  motionWindow.push(m);
+  motionWindow.push(m, missed);
 }
 
 // Publishes the newest MOTION_WINDOW_SIZE samples, oldest first, as a compact
@@ -334,7 +420,8 @@ void publishMotionWindow() {
   doc["t0_ms"] = lastMotionSampleMs - (unsigned long)(MOTION_WINDOW_SIZE - 1) * SENSOR_SAMPLE_MS;
   doc["sample_rate_hz"] = MOTION_SAMPLE_RATE_HZ;
   doc["window_size"] = MOTION_WINDOW_SIZE;
-  doc["dropped"] = motionDropped;
+  uint16_t dropped = motionWindow.droppedInWindow();
+  doc["dropped"] = dropped;   // gaps still inside THIS window; backend rejects if > 0
   doc["sim"] = true;
 
   JsonArray s = doc["s"].to<JsonArray>();
@@ -349,27 +436,38 @@ void publishMotionWindow() {
     row.add(round1(m.gz));
   }
 
-  // Static so a ~1.2 kB payload does not sit on the loop task stack.
+  // Static so the payload does not sit on the loop task stack. Worst case with
+  // clamped values ("-8" .. "-500" style numbers) is about 1.4 kB; the MQTT
+  // buffer (setBufferSize) also has to hold the topic and packet header.
   static char buf[1600];
   size_t n = serializeJson(doc, buf, sizeof(buf));
   if (n == 0 || n >= sizeof(buf) - 1) {
-    Serial.println(F("[MOTION] payload too big, not sent"));
+    Serial.println(F("[MOTION] payload too big, not sent (never truncated)"));
     return;
   }
+  if (n > statMaxMotionBytes) statMaxMotionBytes = n;
   if (mqtt.publish(topicMotion, (const uint8_t *)buf, n, false)) {
-    Serial.printf("[MOTION] -> window %lu (%u bytes, %u dropped)\n",
-                  (unsigned long)motionSeq, (unsigned)n, motionDropped);
-    motionDropped = 0;
+    statWindowsSent++;
+    if (dropped) statWindowsGapped++;
+    // One line per window would flood the monitor at 1 Hz; print every 5th
+    // window, and every window that carries a gap.
+    if (dropped || motionSeq % 5 == 0) {
+      Serial.printf("[MOTION] -> window %lu (%u bytes, dropped=%u)\n",
+                    (unsigned long)motionSeq, (unsigned)n, dropped);
+    }
   } else {
-    Serial.println(F("[MOTION] publish FAILED"));
+    Serial.printf("[MOTION] publish FAILED (%u bytes)\n", (unsigned)n);
   }
 }
 
+// Called every TEMP_READ_MS (1 s), longer than the 750 ms 12-bit conversion that
+// the previous call started. Reads the scratchpad by cached address, which is a
+// few ms of OneWire traffic, then starts the next conversion without waiting.
 void readTemperature() {
-  if (!tempOk) return;
-  float c = tempSensor.getTempCByIndex(0);
+  if (!tempOk || scenario != SC_OFF) return;
+  float c = tempSensor.getTempC(tempAddr);
   v.bodyTemp = (c == DEVICE_DISCONNECTED_C) ? NAN : c;
-  tempSensor.requestTemperatures();          // start the next conversion
+  tempSensor.requestTemperaturesByAddress(tempAddr);
 }
 
 // ------------------------------------------------------------------
@@ -471,6 +569,7 @@ void checkFall() {
 // Telemetry + status
 // ------------------------------------------------------------------
 void publishTelemetry() {
+  applyScenario();                           // no-op unless a scenario is running
   char ts[25] = "";
   if (!isoTimeNow(ts, sizeof(ts))) ts[0] = '\0';
 
@@ -674,6 +773,88 @@ void maintainMqtt() {
 }
 
 // ------------------------------------------------------------------
+// Serial Monitor: demo scenarios and status (type a line, press Enter)
+// ------------------------------------------------------------------
+const char *scenarioName(Scenario s) {
+  switch (s) {
+    case SC_STABLE:       return "stable";
+    case SC_RISING_HR:    return "rising_hr";
+    case SC_FALLING_SPO2: return "falling_spo2";
+    case SC_RISING_TEMP:  return "rising_temperature";
+    default:              return "off (potentiometers + DS18B20)";
+  }
+}
+
+void printHelp() {
+  Serial.println(F("[HELP] Commands for the Serial Monitor:"));
+  Serial.println(F("  scenario stable | rising_hr | falling_spo2 | rising_temperature"));
+  Serial.println(F("           2-minute ramp from 75 bpm / 98 % / 36.6 C, then hold"));
+  Serial.println(F("  scenario off   back to potentiometers and the DS18B20"));
+  Serial.println(F("  status         print health counters now"));
+  Serial.println(F("  sos            same as pressing the SOS button"));
+}
+
+void printHealth() {
+  Serial.printf("[HEALTH] wifi=%s mqtt=%s windows=%lu gapped=%lu missed_samples=%lu "
+                "max_motion_bytes=%u max_loop_ms=%lu scenario=%s\n",
+                WiFi.status() == WL_CONNECTED ? "up" : "down",
+                mqtt.connected() ? "up" : "down",
+                (unsigned long)statWindowsSent, (unsigned long)statWindowsGapped,
+                (unsigned long)statMissedSamples, (unsigned)statMaxMotionBytes,
+                statMaxLoopMs, scenarioName(scenario));
+  Serial.printf("[HEALTH] HR=%d bpm SpO2=%.1f %% temp=%.2f C |a|peak=%.2f g\n",
+                v.heartRate, v.spo2, v.bodyTemp, v.peakG);
+  statMaxLoopMs = 0;
+}
+
+void handleSerialLine(char *line) {
+  // trim and lowercase
+  while (*line == ' ') line++;
+  for (char *p = line; *p; p++) *p = (char)tolower(*p);
+  size_t len = strlen(line);
+  while (len && line[len - 1] == ' ') line[--len] = '\0';
+  if (!len) return;
+
+  if (strncmp(line, "scenario", 8) == 0) {
+    const char *arg = line + 8;
+    while (*arg == ' ') arg++;
+    Scenario next = SC_OFF;
+    if      (!strcmp(arg, "stable"))             next = SC_STABLE;
+    else if (!strcmp(arg, "rising_hr"))          next = SC_RISING_HR;
+    else if (!strcmp(arg, "falling_spo2"))       next = SC_FALLING_SPO2;
+    else if (!strcmp(arg, "rising_temperature")) next = SC_RISING_TEMP;
+    else if (strcmp(arg, "off") != 0) { printHelp(); return; }
+    scenario = next;
+    scenarioStartMs = millis();
+    if (next == SC_OFF) {
+      v.bodyTemp = NAN;                      // wait for a fresh DS18B20 reading
+      if (tempOk) tempSensor.requestTemperaturesByAddress(tempAddr);
+    }
+    Serial.printf("[SCENARIO] %s%s\n", scenarioName(next),
+                  next == SC_OFF ? "" : " (simulated, ramp 120 s then hold)");
+  } else if (!strcmp(line, "status")) {
+    printHealth();
+  } else if (!strcmp(line, "sos")) {
+    raiseAlert("manual_sos", v.peakG);
+  } else {
+    printHelp();
+  }
+}
+
+void pollSerial() {
+  while (Serial.available()) {
+    char c = (char)Serial.read();
+    if (c == '\r' || c == '\n') {
+      serialLine[serialLen] = '\0';
+      if (serialLen) handleSerialLine(serialLine);
+      serialLen = 0;
+    } else if (serialLen < sizeof(serialLine) - 1) {
+      serialLine[serialLen++] = c;
+    }
+  }
+}
+
+// ------------------------------------------------------------------
 void setup() {
   Serial.begin(115200);
   delay(200);
@@ -713,9 +894,15 @@ void setup() {
   mqtt.setCallback(onMqttMessage);
   mqtt.setBufferSize(2048);     // a 30-sample motion window is ~1.2 kB
   mqtt.setKeepAlive(15);        // broker sends the "offline" will after ~22 s of silence
+<<<<<<< HEAD
 #if JAGSI_AZURE
   mqtt.setSocketTimeout(10);    // a TLS handshake on the ESP32 can take a few seconds
 #endif
+=======
+
+  Serial.printf("[BOOT] device=%s topics=%s%s/...\n", DEVICE_ID, TOPIC_BASE, DEVICE_ID);
+  printHelp();
+>>>>>>> origin/main
 }
 
 void loop() {
@@ -725,7 +912,10 @@ void loop() {
   maintainMqtt();
 
   if (now - lastSampleMs >= SENSOR_SAMPLE_MS) {
-    lastSampleMs = now;
+    // Drift-free 10 Hz grid. If the loop fell more than one period behind
+    // (blocking connect), resync; pushMotionSample() records the missed samples.
+    lastSampleMs += SENSOR_SAMPLE_MS;
+    if (now - lastSampleMs >= SENSOR_SAMPLE_MS) lastSampleMs = now;
     readSimulatedVitals();
     readImu();
     pushMotionSample();
@@ -747,4 +937,13 @@ void loop() {
     lastMotionPublishMs = now;
     publishMotionWindow();
   }
+
+  pollSerial();
+  if (now - lastHealthMs >= HEALTH_LOG_MS) {
+    lastHealthMs = now;
+    printHealth();
+  }
+
+  unsigned long took = millis() - now;
+  if (took > statMaxLoopMs) statMaxLoopMs = took;
 }

@@ -8,6 +8,10 @@ The system combines **embedded hardware, cloud telemetry, machine learning, and 
 
 ---
 
+## Simulation delivery plan
+
+The [Wokwi team requirements](docs/wokwi-team-requirements.md) define the selected demonstration using simulated ESP32 inputs, JagSi-trained fall and vital-trend models, Supabase persistence and the caregiver dashboard. Akhnaf owns [models and firmware](https://github.com/akhnafyooga/JagSi/issues/20), Rafi owns [cloud and inference integration](https://github.com/akhnafyooga/JagSi/issues/21), and Akmal owns [dashboard and acceptance](https://github.com/akhnafyooga/JagSi/issues/22). The new implementation work is open.
+
 ## Team
 
 | Role             | Name                     | Student ID |
@@ -36,7 +40,7 @@ The system is designed around the needs of elderly individuals and their caregiv
 
 ---
 
-## System Architecture
+## Target System Architecture
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
@@ -92,7 +96,7 @@ The system is designed around the needs of elderly individuals and their caregiv
 
 ---
 
-## Core Features
+## Planned Product Features
 
 ### 1. Embedded Hardware and Telemetry
 
@@ -275,17 +279,11 @@ The methodology also supports iterative caregiver and user feedback and rapid te
 
 ## Development Roadmap
 
-The project is planned across six sprints:
+The [sprint status](docs/index.md#sprint-status) tracks delivery against the original six workstreams.
 
-| Sprint       | Focus                                                  |
-| ------------ | ------------------------------------------------------ |
-| **Sprint 1** | Brainstorming and SDLC Planning                        |
-| **Sprint 2** | Low-Fidelity Wireframing and Wokwi Hardware Simulation |
-| **Sprint 3** | Azure IoT Hub and MQTT Ingestion                       |
-| **Sprint 4** | ML Model and Gemini AI Backend                         |
-| **Sprint 5** | Caregiver Web Application                              |
-| **Sprint 6** | End-to-End Testing, CI/CD and Final Documentation      |
+## Run the development baseline
 
+<<<<<<< HEAD
 Each sprint represents two project sessions according to the project Gantt chart.
 
 ---
@@ -437,3 +435,19 @@ The project documentation includes:
 
 Progress per week is documented in `docs/week6-validation.md`,
 `docs/week7-validation.md` and `docs/week8-validation.md`.
+=======
+The documented end-to-end development setup lives on the [Week 6 integration branch](https://github.com/akhnafyooga/JagSi/tree/b6278df5fbc6444be805a0cb0970a5b24665981f). Follow its [firmware setup](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/firmware/README.md) and [backend and dashboard setup](https://github.com/akhnafyooga/JagSi/blob/b6278df5fbc6444be805a0cb0970a5b24665981f/backend/README.md) for the MQTT development environment.
+
+## Project Status
+
+**17 November 2026**
+
+| Workstream | Current evidence |
+| --- | --- |
+| Wearable and MQTT | Wokwi firmware publishes telemetry, alerts, and device state and receives commands. Heart rate and SpO2 are simulated in Wokwi. Physical sensor and casing validation remain open. |
+| Week 6 integration | PR #18 contains the 30-sample, 10 Hz motion windows, FastAPI MQTT bridge, SQLite storage, and live dashboard feed over server-sent events. The pull request is open. |
+| Fall detection | The original model scored 0.985 recall and 0.914 precision on held-out synthetic windows from its training generator. Firmware-shaped synthetic validation yielded 0.401 precision and flagged 96.0% of walking windows at threshold 0.11. The [calibration protocol](docs/fall-calibration.md) is complete. Physical MPU6050 calibration and held-out evaluation remain open. |
+| Azure and Gemini | Week 7 reports local Event Grid replay, threshold-retuning tooling, and Bahasa Indonesia summaries and chat with a rule-based fallback. A published Week 7 commit, live Azure and Gemini checks, and an ESP32 target build are pending. |
+
+See the [project portal](docs/index.md) for sprint status, issue links, and validation evidence.
+>>>>>>> origin/main
