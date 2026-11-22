@@ -1,12 +1,8 @@
 import { TopAppBar } from '@/components/TopAppBar';
 import { Icon } from '@/components/Icon';
-import { alerts, elder } from '@/lib/mock-data';
-
-const toneMap = {
-  warning: { box: 'border-amber-200/60 bg-amber-50/60', icon: 'bg-amber-100 text-amber-700' },
-  critical: { box: 'border-error/25 bg-error/5', icon: 'bg-error/10 text-error' },
-  info: { box: 'border-sky-200/60 bg-sky-50/60', icon: 'bg-sky-100 text-sky-700' },
-} as const;
+import { AlertSettingsCard } from '@/components/AlertSettingsCard';
+import { LiveAlertLog } from '@/components/LiveAlertLog';
+import { elder } from '@/lib/mock-data';
 
 export default function DaruratPage() {
   return (
@@ -29,34 +25,10 @@ export default function DaruratPage() {
           </p>
         </section>
 
-        {/* Alert log */}
-        <section className="space-y-2">
-          <h2 className="text-base font-semibold tracking-tight text-on-surface">Riwayat Peringatan</h2>
-          <div className="space-y-2">
-            {alerts.map((a) => {
-              const tone = toneMap[a.tone];
-              return (
-                <article
-                  key={a.id}
-                  className={`flex items-start gap-3 rounded-2xl border p-3.5 ${tone.box}`}
-                >
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${tone.icon}`}>
-                    <Icon name={a.icon} className="text-[20px]" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-on-surface">{a.title}</h3>
-                      <span className="shrink-0 text-[11px] font-medium text-on-surface-variant">
-                        {a.time}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-on-surface-variant">{a.description}</p>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
+        <AlertSettingsCard />
+
+        {/* Live from the backend since Week 8 (issue #13); was mock data. */}
+        <LiveAlertLog />
       </main>
     </>
   );

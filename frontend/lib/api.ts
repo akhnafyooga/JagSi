@@ -125,3 +125,80 @@ export function fetchAlerts(limit = 10, signal?: AbortSignal): Promise<{ alerts:
 }
 
 export const STREAM_URL = `${API_BASE}/api/stream`;
+
+// -- AI health summary and chat (issue #10) ---------------------------------
+
+export interface ApiSummary {
+  device_id: string;
+  text: string;
+  /** 'gemini' when the model answered, 'rules' for the backend's fallback. */
+  source: 'gemini' | 'rules';
+  model: string;
+  generated_at: string;
+  based_on: {
+    readings: number;
+    latest_at: string | null;
+    open_alerts: number;
+    simulated: boolean;
+  };
+  error: string | null;
+}
+
+export interface ChatTurn {
+  role: 'user' | 'assistant';
+  text: string;
+}
+
+export interface ApiChatAnswer {
+  answer: string;
+  source: 'gemini' | 'rules';
+  model: string;
+}
+
+export function fetchSummary(refresh = false, signal?: AbortSignal): Promise<ApiSummary> {
+  const query = refresh ? '?refresh=true' : '';
+  return getJson<ApiSummary>(`/api/devices/${DEVICE_ID}/summary${query}`, signal);
+}
+
+export async function askAssistant(
+  question: string,
+  history: ChatTurn[] = [],
+  signal?: AbortSignal,
+): Promise<ApiChatAnswer> {
+  const response = await fetch(`${API_BASE}/api/devices/${DEVICE_ID}/chat`, {
+    method: 'POST',
+    signal,
+    cache: 'no-store',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ question, history: history.slice(-6) }),
+  });
+  if (!response.ok) {
+    throw new Error(`/chat returned ${response.status}`);
+  }
+  return (await response.json()) as ApiChatAnswer;
+}
+
+/**
+ * The badge next to the summary. It always says where the text came from, so a
+ * fixed fallback sentence is never mistaken for an AI reading of today's data.
+ */
+export function summarySourceLabel(source: ApiSummary['source'] | 'demo', model: string): string {
+  if (source === 'gemini') return `Gemini · ${model}`;
+  if (source === 'rules') return 'Ringkasan otomatis';
+  return 'Data demo';
+}
+
+// -- emergency alerts (issue #13) ---------------------------------------------
+
+/** REST fallback for "Saya tangani" when the alert WebSocket is down. */
+export async function acknowledgeAlert(alertId: string, signal?: AbortSignal): Promise<void> {
+  const response = await fetch(`${API_BASE}/api/alerts/${encodeURIComponent(alertId)}/ack`, {
+    method: 'POST',
+    signal,
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`/ack returned ${response.status}`);
+  }
+}

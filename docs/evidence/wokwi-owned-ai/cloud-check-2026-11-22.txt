@@ -1,0 +1,41 @@
+# python scripts/cloud_check.py  (22 Nov 2026, local PostgreSQL 16.15 stand-in, JAGSI_TEST_PG_DSN)
+
+JagSi cloud check: local PostgreSQL (JAGSI_TEST_PG_DSN), source 8a8c6385-d895-4cc0-ac5e-f1d854cd9f74
+
+0. Setup
+  PASS  trend model trained from the #20 reference script
+  PASS  schema.sql applied (idempotent)
+  PASS  bridge connected to the MQTT broker
+
+1. Telemetry reaches the cloud (R07)
+  PASS  5 readings mirrored within 5 s of arrival
+  PASS  message with mismatched device_id was rejected, not stored
+  PASS  progress says insufficient_data before 60 readings
+
+2. Cloud outage and catch-up (R08)
+  PASS  SQLite kept collecting while the mirror was down
+  PASS  restarted worker caught up the 10-row backlog
+
+3. Alert snapshot follows the acknowledgment
+  PASS  SOS stored in the cloud as unresolved
+  PASS  caregiver acknowledgment reached the cloud
+
+4. Trend inference on 60 stored readings (R09), about 90 s
+        {"state": "ready", "label": "rising_hr", "confidence": 0.9867, "model_version": "synthetic-trends-v1", "telemetry_ids": [1, 60], "span_seconds": 120.0, "guidance": "Detak jantung simulasi meningkat. Periksa aktivitas dan konteks pembacaan."}
+  PASS  progress returned a ready prediction
+  PASS  pattern recognised as rising_hr
+  PASS  result traces back to stored telemetry IDs
+  PASS  analysis row stored in the cloud
+  PASS  progress answered in 36 ms
+  PASS  cloud history is oldest-first and complete
+
+5. Restart and replay
+  PASS  restart with the same source ID added no duplicates
+
+6. Stale feed
+  PASS  no prediction once readings are older than 10 s
+  PASS  worker log shows mirrored batches and no failures
+  PASS  database URI never printed by the worker
+
+20 checks, 20 passed, 0 failed
+worker log: <tmp>/worker.log

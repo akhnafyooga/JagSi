@@ -1,36 +1,55 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+
+import { type ChatTurn, askAssistant } from '@/lib/api';
+import { elder } from '@/lib/mock-data';
+
 import { Icon } from './Icon';
 
-interface Message {
-  role: 'assistant' | 'user';
-  text: string;
+interface Message extends ChatTurn {
+  /** Marks answers from the backend's rule-based fallback, not from Gemini. */
+  fallback?: boolean;
 }
 
-const initialMessages: Message[] = [
-  {
-    role: 'assistant',
-    text: 'Halo, saya asisten kesehatan JagSi. Tanyakan apa pun tentang kondisi Ibu Sari.',
-  },
-];
+const greeting: Message = {
+  role: 'assistant',
+  text: `Halo, saya asisten kesehatan JagSi. Tanyakan apa pun tentang kondisi ${elder.name}.`,
+};
 
+const OFFLINE_ANSWER =
+  'Maaf, server JagSi sedang tidak bisa dihubungi. Coba lagi sebentar lagi. Jika darurat, hubungi 112 atau 119.';
+
+/**
+ * Caregiver chat (issue #10). Questions go to POST /api/devices/{id}/chat, which
+ * answers from the stored telemetry using Gemini, or with a rule-based summary
+ * when no model is available. The greeting is not sent as history.
+ */
 export function ChatAssistant() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([greeting]);
   const [input, setInput] = useState('');
+  const [pending, setPending] = useState(false);
+  const listEnd = useRef<HTMLDivElement>(null);
 
-  function submit() {
+  async function submit() {
     const text = input.trim();
-    if (!text) return;
-    setMessages((prev) => [
-      ...prev,
-      { role: 'user', text },
-      {
-        role: 'assistant',
-        text: 'Baik, saya akan bantu analisis. (Demo — terhubung ke JagSi AI pada Sprint 5.)',
-      },
-    ]);
+    if (!text || pending) return;
+    const history: ChatTurn[] = messages.slice(1).map(({ role, text: t }) => ({ role, text: t }));
+    setMessages((prev) => [...prev, { role: 'user', text }]);
     setInput('');
+    setPending(true);
+    try {
+      const reply = await askAssistant(text, history);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: reply.answer, fallback: reply.source !== 'gemini' },
+      ]);
+    } catch {
+      setMessages((prev) => [...prev, { role: 'assistant', text: OFFLINE_ANSWER, fallback: true }]);
+    } finally {
+      setPending(false);
+      requestAnimationFrame(() => listEnd.current?.scrollIntoView?.({ block: 'nearest' }));
+    }
   }
 
   return (
@@ -43,7 +62,7 @@ export function ChatAssistant() {
       </div>
 
       <div className="rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-3 shadow-sm">
-        <div className="space-y-2">
+        <div className="space-y-2" aria-live="polite">
           {messages.map((m, i) => (
             <div
               key={i}
@@ -57,24 +76,44 @@ export function ChatAssistant() {
                 }`}
               >
                 {m.text}
+                {m.fallback && (
+                  <span className="mt-1 block text-[11px] text-on-surface-variant">
+                    Jawaban otomatis, bukan dari AI
+                  </span>
+                )}
               </div>
             </div>
           ))}
+          {pending && (
+            <div className="flex justify-start">
+              <div className="rounded-xl bg-surface-container px-3 py-2 text-sm text-on-surface-variant">
+                Sedang menjawab…
+              </div>
+            </div>
+          )}
+          <div ref={listEnd} />
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
+        <p className="mt-2 text-[11px] text-on-surface-variant">
+          Informasi umum dari data jam tangan, bukan diagnosis medis.
+        </p>
+
+        <div className="mt-2 flex items-center gap-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && submit()}
+            onKeyDown={(e) => e.key === 'Enter' && void submit()}
             placeholder="Tanyakan kondisi kesehatan…"
-            className="min-w-0 flex-1 rounded-xl border border-outline-variant/40 bg-surface-container-low px-3 py-2.5 text-sm outline-none focus:border-primary"
+            maxLength={500}
+            disabled={pending}
+            className="min-w-0 flex-1 rounded-xl border border-outline-variant/40 bg-surface-container-low px-3 py-2.5 text-sm outline-none focus:border-primary disabled:opacity-60"
           />
           <button
-            onClick={submit}
+            onClick={() => void submit()}
             aria-label="Kirim"
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-on-primary transition-colors hover:bg-primary-dim active:scale-95"
+            disabled={pending || !input.trim()}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-on-primary transition-colors hover:bg-primary-dim active:scale-95 disabled:opacity-50"
           >
             <Icon name="send" className="text-[18px]" />
           </button>

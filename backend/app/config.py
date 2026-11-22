@@ -32,6 +32,13 @@ class Settings:
     topic_base: str = os.getenv("JAGSI_TOPIC_BASE", "jagsi/abal/v1/")
     device_id: str = os.getenv("JAGSI_DEVICE_ID", "jagsi-watch-01")
 
+    # Week 9 (#21): with the public broker anyone can publish on our prefix.
+    # restrict_device drops messages for any device other than device_id, and
+    # max_payload_bytes drops oversized messages before JSON parsing. A full
+    # motion window is about 2 KB.
+    restrict_device: bool = _env_bool("JAGSI_RESTRICT_DEVICE", False)
+    max_payload_bytes: int = int(os.getenv("JAGSI_MAX_PAYLOAD_BYTES", "16384"))
+
     db_path: str = os.getenv("JAGSI_DB_PATH", str(BACKEND_DIR / "data" / "jagsi.db"))
 
     model_path: str = os.getenv(
@@ -55,6 +62,38 @@ class Settings:
     # three overlapping windows does not alert three times.
     ml_alert_cooldown_seconds: int = int(os.getenv("JAGSI_ML_COOLDOWN_S", "15"))
 
+    # Where device messages come from (issue #8):
+    #   mqtt  - subscribe to the broker above (Week 6 behaviour, the default)
+    #   azure - Azure IoT Hub: messages arrive at POST /api/ingest/eventgrid and
+    #           commands go out as IoT Hub direct methods. No MQTT connection.
+    ingest_mode: str = os.getenv("JAGSI_INGEST", "mqtt").strip().lower()
+    # e.g. jagsi-hub.azure-devices.net
+    azure_iothub_hostname: str = os.getenv("JAGSI_IOTHUB_HOSTNAME", "")
+    # A policy with ServiceConnect only. Not iothubowner: the backend has no
+    # reason to be able to create or delete devices.
+    azure_service_policy: str = os.getenv("JAGSI_IOTHUB_POLICY", "service")
+    azure_service_key: str = os.getenv("JAGSI_IOTHUB_POLICY_KEY", "")
+    # Shared secret Event Grid must send as ?key=..., so nobody else can post
+    # fake telemetry to the public webhook. Required in azure mode.
+    eventgrid_key: str = os.getenv("JAGSI_EVENTGRID_KEY", "")
+
+    # Gemini health summaries (issue #10). Without a key the API falls back to a
+    # rule-based summary so the dashboard still works offline and in tests.
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", "") or os.getenv("JAGSI_GEMINI_API_KEY", "")
+    # gemini-3.8-flash, as docs/week7-validation.md and backend/README.md say.
+    # The Week 7 code still defaulted to gemini-2.5-flash, which Google now only
+    # serves to projects that used it before; a new key would get an error and
+    # every summary would silently fall back to the rules.
+    gemini_model: str = os.getenv("JAGSI_GEMINI_MODEL", "gemini-3.8-flash")
+    gemini_timeout_s: float = float(os.getenv("JAGSI_GEMINI_TIMEOUT_S", "20"))
+    summary_cache_seconds: int = int(os.getenv("JAGSI_SUMMARY_CACHE_S", "60"))
+    elder_name: str = os.getenv("JAGSI_ELDER_NAME", "Ibu Sari")
+
+    # Labelled motion recordings for re-tuning the fall threshold (issue #9).
+    recordings_dir: str = os.getenv(
+        "JAGSI_RECORDINGS_DIR", str(BACKEND_DIR / "data" / "recordings")
+    )
+
     cors_origins: list[str] = field(
         default_factory=lambda: [
             o.strip()
@@ -64,6 +103,10 @@ class Settings:
             if o.strip()
         ]
     )
+
+    @property
+    def azure(self) -> bool:
+        return self.ingest_mode == "azure"
 
     def topic(self, suffix: str, device_id: str | None = None) -> str:
         return f"{self.topic_base}{device_id or self.device_id}/{suffix}"

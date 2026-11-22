@@ -1,7 +1,7 @@
 # JagSi MQTT Contract (v1)
 
 Issue: [#6 Program MQTT pub/sub data pipeline](https://github.com/akhnafyooga/JagSi/issues/6)
-Status: Sprint 1 draft, tested on a public broker. In Sprint 2 (#8) the same topics and payloads move to Azure IoT Hub.
+Status: Sprint 1 draft, tested on a public broker. As of Week 7 (#8) the same payloads also run over Azure IoT Hub; see section 5 and `docs/azure-setup.md`.
 
 ## 1. Broker (Sprint 1, development only)
 
@@ -184,3 +184,31 @@ Duplicate suppression: when both layers fire for the same fall, two alerts reach
 caregiver. The backend therefore suppresses an ML alert if a device `event` for the
 same `device_id` arrived within the last 10 seconds, and records which layer won in
 `ALERT_EVENT.source` (`device_rule` or `ml`).
+
+## 5. The same contract over Azure IoT Hub (issue #8, Week 7)
+
+Payloads (section 3) are byte-for-byte the same. Only the addressing changes,
+because IoT Hub has a fixed topic layout.
+
+| Week 6 topic | Over IoT Hub |
+|---|---|
+| `.../{device_id}/telemetry` | `devices/{device_id}/messages/events/$.ct=application%2Fjson&$.ce=utf-8&type=telemetry` |
+| `.../{device_id}/motion` | same, `type=motion` |
+| `.../{device_id}/event` | same, `type=event` |
+| `.../{device_id}/status` | same, `type=status` (not retained: IoT Hub keeps no retained messages) |
+| `.../{device_id}/cmd` | direct method: name = `cmd`, payload = the other fields |
+
+- `type` is an application property. The backend uses it to route the message
+  exactly as it used the last topic segment before.
+- `$.ct` and `$.ce` (content type JSON, encoding UTF-8) make Event Grid deliver
+  the body as JSON instead of base64. The backend decodes base64 too, in case.
+- MQTT client id must equal `device_id`; username is
+  `{hub}.azure-devices.net/{device_id}/?api-version=2021-04-12`; no password
+  (the X.509 certificate is the credential).
+- Commands: the device subscribes to `$iothub/methods/POST/#`, runs the command,
+  and answers on `$iothub/methods/res/{status}/?$rid={rid}` with status 200, 400
+  (bad arguments) or 404 (unknown command). Example: `{"cmd":"ack_alert","event_id":"..."}`
+  becomes method `ack_alert` with payload `{"event_id":"..."}`.
+- Online/offline comes from IoT Hub's `DeviceConnected` / `DeviceDisconnected`
+  events, mapped to a `status` message `{"device_id":..., "state":"online"|"offline"}`.
+

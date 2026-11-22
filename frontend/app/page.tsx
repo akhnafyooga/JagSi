@@ -1,9 +1,10 @@
 import { TopAppBar } from '@/components/TopAppBar';
 import { LiveVitals } from '@/components/LiveVitals';
-import { FallStatusCard } from '@/components/FallStatusCard';
-import { AiHealthSummary } from '@/components/AiHealthSummary';
+import { LiveFallStatus } from '@/components/LiveFallStatus';
+import { AlertSettingsCard } from '@/components/AlertSettingsCard';
+import { LiveAiSummary } from '@/components/LiveAiSummary';
 import { ChatAssistant } from '@/components/ChatAssistant';
-import { aiSummary, elder, fallStatus } from '@/lib/mock-data';
+import { elder } from '@/lib/mock-data';
 
 export default function HomePage() {
   return (
@@ -13,23 +14,16 @@ export default function HomePage() {
       <main className="space-y-4 px-4 pt-3">
         {/*
           Vital signs and the status banner are live from the backend as of
-          Week 6. The fall status card, AI summary and chat below are still the
-          mock data from issue #12: the fall card needs the alert stream wired
-          in, and the AI summary needs the Gemini service (Sprint 4).
+          Week 6; the AI summary and chat are live as of Week 7 (issue #10);
+          the fall status card follows the alert WebSocket as of Week 8 (#13).
         */}
+        <AlertSettingsCard compact />
+
         <LiveVitals />
 
-        <FallStatusCard
-          status={fallStatus.status}
-          label={fallStatus.label}
-          note={fallStatus.note}
-        />
+        <LiveFallStatus />
 
-        <AiHealthSummary
-          text={aiSummary.text}
-          model={aiSummary.model}
-          updatedAt={aiSummary.updatedAt}
-        />
+        <LiveAiSummary />
 
         <ChatAssistant />
       </main>

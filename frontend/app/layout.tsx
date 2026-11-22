@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { BottomNav } from '@/components/BottomNav';
+import { EmergencyAlertsProvider } from '@/components/EmergencyAlertsProvider';
+import { elder } from '@/lib/mock-data';
 
 export const metadata: Metadata = {
   title: 'JagSi (Jaga Lansia) — Caregiver Dashboard',
@@ -28,10 +30,13 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-surface-container-low text-on-surface antialiased">
-        <div className="mx-auto flex min-h-screen max-w-[430px] flex-col bg-background shadow-xl">
-          <main className="flex-1 pb-24">{children}</main>
-          <BottomNav />
-        </div>
+        {/* One alert WebSocket for the whole app, so the emergency screen shows on every page (#13). */}
+        <EmergencyAlertsProvider elderName={elder.name}>
+          <div className="mx-auto flex min-h-screen max-w-[430px] flex-col bg-background shadow-xl">
+            <main className="flex-1 pb-24">{children}</main>
+            <BottomNav />
+          </div>
+        </EmergencyAlertsProvider>
       </body>
     </html>
   );
