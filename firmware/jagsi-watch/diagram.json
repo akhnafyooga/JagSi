@@ -41,5 +41,6 @@
     ["pot_batt:GND", "esp:GND.1", "black", []],
     ["pot_batt:SIG", "esp:32", "yellow", []]
   ],
+  "serialMonitor": {"display": "always", "newline": "lf"},
   "dependencies": {}
 }

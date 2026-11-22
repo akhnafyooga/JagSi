@@ -135,7 +135,73 @@ static void test_capacity_matches_ml_schema() {
   CHECK(MotionWindow<kWindow>::capacity() == 30, "capacity must be 30 samples");
 }
 
+static void test_clean_window_reports_no_drops() {
+  std::printf("test_clean_window_reports_no_drops\n");
+  MotionWindow<kWindow> w;
+  for (uint8_t i = 0; i < 45; i++) w.push(make((float)i), 0);
+  CHECK(w.droppedInWindow() == 0, "clean 10 Hz stream must report 0 drops");
+}
+
+static void test_gap_stays_until_it_ages_out() {
+  std::printf("test_gap_stays_until_it_ages_out\n");
+  MotionWindow<kWindow> w;
+  for (uint8_t i = 0; i < kWindow; i++) w.push(make((float)i), 0);
+  // The loop stalled: 4 samples were never taken before this one.
+  w.push(make(30.0f), 4);
+  CHECK(w.droppedInWindow() == 4, "gap must be counted right after it happens");
+
+  // Publishing does not clear it. It must survive the next overlapping windows.
+  for (uint8_t i = 0; i < 20; i++) w.push(make((float)(31 + i)), 0);
+  CHECK(w.droppedInWindow() == 4, "gap must still count 20 samples later");
+
+  // 28 clean samples after the gap: the gapped sample is now the 2nd oldest,
+  // so the gap is still between two samples of the window.
+  for (uint8_t i = 0; i < 8; i++) w.push(make((float)(51 + i)), 0);
+  CHECK(w.droppedInWindow() == 4, "gap must count while it sits inside the window");
+
+  // One more: the gapped sample becomes the oldest, the gap is in front of the
+  // window, the spacing inside the window is a clean 10 Hz again.
+  w.push(make(59.0f), 0);
+  CHECK(w.droppedInWindow() == 0, "gap in front of the oldest sample must not count");
+}
+
+static void test_multiple_gaps_add_up_and_age_separately() {
+  std::printf("test_multiple_gaps_add_up_and_age_separately\n");
+  MotionWindow<kWindow> w;
+  for (uint8_t i = 0; i < kWindow; i++) w.push(make((float)i), 0);
+  w.push(make(100.0f), 2);
+  for (uint8_t i = 0; i < 9; i++) w.push(make((float)(101 + i)), 0);
+  w.push(make(200.0f), 3);
+  CHECK(w.droppedInWindow() == 5, "two gaps inside one window must add up");
+  // Age out the first gap only: it needs 29 more pushes after it in total.
+  for (uint8_t i = 0; i < 19; i++) w.push(make((float)(201 + i)), 0);
+  CHECK(w.droppedInWindow() == 3, "older gap ages out first, newer one remains");
+}
+
+static void test_huge_gap_saturates_not_wraps() {
+  std::printf("test_huge_gap_saturates_not_wraps\n");
+  MotionWindow<kWindow> w;
+  for (uint8_t i = 0; i < kWindow; i++) w.push(make((float)i), 0);
+  w.push(make(30.0f), 600);   // e.g. a 60 s reconnect
+  CHECK(w.droppedInWindow() == 255, "large gap must saturate at 255, not wrap to a small number");
+}
+
+static void test_reset_clears_gaps() {
+  std::printf("test_reset_clears_gaps\n");
+  MotionWindow<kWindow> w;
+  for (uint8_t i = 0; i < kWindow; i++) w.push(make((float)i), 1);
+  CHECK(w.droppedInWindow() == 29, "precondition: 29 gaps inside the window");
+  w.reset();
+  for (uint8_t i = 0; i < kWindow; i++) w.push(make((float)i), 0);
+  CHECK(w.droppedInWindow() == 0, "reset must clear old gap counts");
+}
+
 int main() {
+  test_clean_window_reports_no_drops();
+  test_gap_stays_until_it_ages_out();
+  test_multiple_gaps_add_up_and_age_separately();
+  test_huge_gap_saturates_not_wraps();
+  test_reset_clears_gaps();
   test_not_full_until_capacity();
   test_first_window_is_chronological();
   test_wraparound_keeps_newest_oldest_first();
