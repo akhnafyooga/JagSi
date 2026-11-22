@@ -94,6 +94,12 @@ curl -s localhost:8000/api/health | python3 -m json.tool
 | POST | `/api/devices/{id}/chat` | `{"question": "...", "history": [...]}`, answer about the stored data |
 | GET | `/api/recording` | is a labelled recording open |
 | POST | `/api/recording/start` / `stop` | `{"label": "walking", "subject": "s01"}` |
+| GET | `/api/devices/{id}/progress` | Week 9 (#21): trend-model result over the last 60 readings stored in Supabase, or a labelled reason it cannot run (`insufficient_data`, `stale`, `irregular_sampling`, `missing_values`) |
+| GET | `/api/devices/{id}/cloud-history?limit=120` | Week 9 (#21): readings as stored in Supabase, oldest first |
+| GET | `/api/cloud/status` | Week 9 (#21): cloud row counts and the mirror cursor |
+
+The three cloud routes need `backend/.env.demo` and answer 503 with the reason when
+the cloud or the trend model is unavailable. Setup: [docs/cloud-inference.md](../docs/cloud-inference.md).
 
 ## Configuration
 
@@ -172,7 +178,12 @@ python3 -m pytest -q                      # 124 tests: ml/ and app/
 python3 scripts/integration_check.py      # 22 checks, whole pipeline on a local broker
 python3 scripts/eventgrid_check.py        # 17 checks, the same over Azure (Event Grid replay)
 python3 scripts/alert_ws_check.py         # 13 checks, watch -> /ws/alerts -> ack -> watch (#13)
+python3 scripts/cloud_check.py            # 20 checks, MQTT -> SQLite -> Supabase -> trend model (#21), ~3 min
 ```
+
+The cloud tests (`demo/tests`) and `cloud_check.py` need a disposable PostgreSQL in
+`JAGSI_TEST_PG_DSN`; without it the cloud tests are skipped. CI starts one. With it
+the suite is 165 tests.
 
 `scripts/integration_check.py` is the one to run after touching the firmware payload,
 the bridge or the contract. It replays byte-identical device payloads through the real
@@ -192,6 +203,12 @@ backend/
 │   ├── realtime.py      thread-safe fan-out of live events (#13)
 │   ├── store.py         SQLite, table names follow the ERD
 │   ├── vitals.py        telemetry row -> dashboard cards, with display bands
+│   └── tests/
+├── demo/                Week 9 (#21): Supabase mirror and trend inference
+│   ├── cloud.py         mirror worker and the /progress, /cloud-history routes
+│   ├── schema.sql       the one Supabase table, RLS on
+│   ├── serve.py         starts the API with .env.demo loaded
+│   ├── train_trends.py  trend-model feature contract (training is #20)
 │   └── tests/
 ├── ml/                  issue #9; retune.py added in Week 7
 └── scripts/
