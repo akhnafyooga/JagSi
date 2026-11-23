@@ -57,11 +57,19 @@ def train(output_dir):
             y.append(label)
     x_train, x_test, y_train, y_test = train_test_split(
         x, y, test_size=.25, random_state=41, stratify=y)
+    x_train, x_tune, y_train, y_tune = train_test_split(
+        x_train, y_train, test_size=1/3, random_state=42, stratify=y_train)
     model = RandomForestClassifier(n_estimators=150, max_depth=8,
                                    random_state=41, class_weight="balanced")
     model.fit(x_train, y_train)
     predicted = model.predict(x_test)
     report = classification_report(y_test, predicted, output_dict=True)
+    tune_probs = model.predict_proba(x_tune)
+    report["tuning"] = classification_report(y_tune, model.predict(x_tune), output_dict=True)
+    report["split_sizes"] = {"train": len(y_train), "tuning": len(y_tune), "test": len(y_test)}
+    report["confidence_gate"] = 0.65
+    report["tuning_coverage"] = float((tune_probs.max(axis=1) >= 0.65).mean())
+    report["test_coverage"] = float((model.predict_proba(x_test).max(axis=1) >= 0.65).mean())
     report["confusion_matrix"] = confusion_matrix(
         y_test, predicted, labels=LABELS).tolist()
     report["labels"] = LABELS

@@ -1,0 +1,120 @@
+{
+  "falling_spo2": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 38.0
+  },
+  "rising_hr": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 37.0
+  },
+  "rising_temperature": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 37.0
+  },
+  "stable": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 38.0
+  },
+  "accuracy": 1.0,
+  "macro avg": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 150.0
+  },
+  "weighted avg": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 150.0
+  },
+  "tuning": {
+    "falling_spo2": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 37.0
+    },
+    "rising_hr": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 38.0
+    },
+    "rising_temperature": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 38.0
+    },
+    "stable": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 37.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 150.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 150.0
+    }
+  },
+  "split_sizes": {
+    "train": 300,
+    "tuning": 150,
+    "test": 150
+  },
+  "confidence_gate": 0.65,
+  "tuning_coverage": 1.0,
+  "test_coverage": 1.0,
+  "confusion_matrix": [
+    [
+      38,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      37,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      38,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      37
+    ]
+  ],
+  "labels": [
+    "stable",
+    "rising_hr",
+    "falling_spo2",
+    "rising_temperature"
+  ],
+  "provenance": "synthetic sessions, one window per session",
+  "sha256": "24529971867c40fd812d3be8b4e0b652a13f16c1c274547e7956bc08137b6a9f"
+}

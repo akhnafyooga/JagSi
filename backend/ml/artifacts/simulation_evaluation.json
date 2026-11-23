@@ -1,0 +1,90 @@
+{
+  "provenance": "synthetic device sessions, 30 seconds each, 24 per activity per split",
+  "tune_seed": 2301,
+  "test_seed": 2302,
+  "selection": "no threshold meets the precision target; best F1 that keeps recall",
+  "artifact_sha256": "6823bf4406349b1ae66cf1afd41e3bae154d614f6f234209deef2986a95046c2",
+  "tuning": {
+    "threshold": 0.95,
+    "fall_recall": 1.0,
+    "alert_precision": 0.381,
+    "f1": 0.552,
+    "falls_detected": 24,
+    "fall_sessions": 24,
+    "false_alerts": 39,
+    "false_alerts_per_hour": 52.23,
+    "flagged_non_fall_windows": 301,
+    "non_fall_windows": 2688
+  },
+  "baseline_test": {
+    "threshold": 0.11,
+    "fall_recall": 1.0,
+    "alert_precision": 0.203,
+    "f1": 0.338,
+    "falls_detected": 24,
+    "fall_sessions": 24,
+    "false_alerts": 94,
+    "false_alerts_per_hour": 125.89,
+    "flagged_non_fall_windows": 1105,
+    "non_fall_windows": 2688
+  },
+  "selected_test": {
+    "threshold": 0.95,
+    "fall_recall": 1.0,
+    "alert_precision": 0.364,
+    "f1": 0.533,
+    "falls_detected": 24,
+    "fall_sessions": 24,
+    "false_alerts": 42,
+    "false_alerts_per_hour": 56.25,
+    "flagged_non_fall_windows": 287,
+    "non_fall_windows": 2688
+  },
+  "activities": [
+    {
+      "activity": "lying_down",
+      "sessions": 24,
+      "windows": 672,
+      "flagged_windows": 287,
+      "flagged_rate": 0.427,
+      "mean_p_fall": 0.585,
+      "alerts": 42
+    },
+    {
+      "activity": "sit_down_hard",
+      "sessions": 24,
+      "windows": 672,
+      "flagged_windows": 0,
+      "flagged_rate": 0.0,
+      "mean_p_fall": 0.027,
+      "alerts": 0
+    },
+    {
+      "activity": "still",
+      "sessions": 24,
+      "windows": 672,
+      "flagged_windows": 0,
+      "flagged_rate": 0.0,
+      "mean_p_fall": 0.026,
+      "alerts": 0
+    },
+    {
+      "activity": "walking",
+      "sessions": 24,
+      "windows": 672,
+      "flagged_windows": 0,
+      "flagged_rate": 0.0,
+      "mean_p_fall": 0.153,
+      "alerts": 0
+    },
+    {
+      "activity": "fall",
+      "sessions": 24,
+      "windows": 72,
+      "flagged_windows": 68,
+      "flagged_rate": 0.944,
+      "mean_p_fall": 0.967,
+      "sessions_detected": 24
+    }
+  ]
+}

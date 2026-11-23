@@ -1,0 +1,14 @@
+{
+  "noisy_stable": {
+    "rising_hr": 23,
+    "stable": 36,
+    "uncertain": 41
+  },
+  "mixed_hr_up_spo2_down": {
+    "uncertain": 100
+  },
+  "step_temperature": {
+    "rising_temperature": 99,
+    "uncertain": 1
+  }
+}
