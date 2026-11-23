@@ -59,3 +59,18 @@ Metrics use the existing 15-window cooldown. See
 `artifacts/simulation_evaluation.json` for the artifact hash, baseline result,
 threshold selection and activity counts. The 0.90 precision gate failed.
 The deployed threshold was left unchanged. Physical validation is outstanding.
+
+### Reproducing and interpreting the fall benchmark
+
+Run `python -m scripts.evaluate_simulated_falls` from `backend` using the environment in the [reviewer runbook](../demo/model_card.md#reviewer-runbook). Each split generates 120 independent sessions with five scripted activities. Each session supplies 300 readings at 10 Hz. The evaluator slides a 30-reading window forward by 10 readings. Each non-fall session contributes 28 scoring opportunities. For falls, only windows containing the known impact sample can earn a true detection.
+
+A session counts as detected if at least one eligible window meets the threshold. For non-fall sessions, repeated positive windows are grouped with the existing 15-window cooldown. Alert precision divides detected falls by detected falls plus false alerts. False alerts per hour uses 96 non-fall sessions × 28 one-second scoring opportunities, or 2,688 seconds of scored exposure. This denominator excludes window warm-up.
+
+| Held-out measure | Stored threshold 0.11 | Simulation candidate 0.95 |
+| --- | ---: | ---: |
+| Detected fall sessions / total | 24/24 | 24/24 |
+| False alerts | 94 | 42 |
+| Alert precision | 0.203 | 0.364 |
+| False alerts per scored hour | 125.89 | 56.25 |
+
+The tuning sweep covers 0.05 to 0.95 in increments of 0.01. No tuning point met both targets. The selection rule used the best F1 among points preserving target recall. The held-out result therefore supports keeping this candidate experimental. Before promoting a revised model, train with varied deliberate lying-down examples, freeze the model and threshold, then measure the same metrics on fresh sessions. Keep physical MPU6050 evaluation tracked separately in #9.
