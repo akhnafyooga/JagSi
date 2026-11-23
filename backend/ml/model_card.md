@@ -45,3 +45,17 @@ Confusion matrix (rows = true, columns = predicted):
 Detect fall impacts from wearable telemetry to trigger caregiver alerts in the
 JagSi system. Decision threshold is tuned for high recall subject to
 precision >= 0.92.
+
+## Simulated device evaluation, 23 November 2026
+
+From backend run `python -m scripts.evaluate_simulated_falls`. The script
+evaluates the stored forest with two independent random seeds and common
+scripted movement templates. Each split contains 24 thirty-second sessions
+per activity. The inputs follow the feature order stored in the artifact.
+The chosen simulation threshold of 0.95 detected 24 of 24 scripted impacts.
+All 42 false alerts came from deliberate lying down, yielding alert precision
+of 0.364 across 2,688 scored non-fall seconds (56.25 false alerts/hour).
+Metrics use the existing 15-window cooldown. See
+`artifacts/simulation_evaluation.json` for the artifact hash, baseline result,
+threshold selection and activity counts. The 0.90 precision gate failed.
+The deployed threshold was left unchanged. Physical validation is outstanding.
