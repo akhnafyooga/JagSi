@@ -7,14 +7,14 @@ import { elder, heartRateTrend, spo2Trend, stepsTrend } from '@/lib/mock-data';
 export default function RiwayatPage() {
   return (
     <>
-      <TopAppBar title="Riwayat Kesehatan" subtitle={elder.name} online />
+      <TopAppBar title="Riwayat kesehatan" subtitle={elder.name} />
 
-      <main className="space-y-5 px-4 pt-3">
+      <div className="jagsi-panels">
         <StatusBanner
           tone="normal"
-          title="Kondisi Mingguan: Sangat Baik"
+          title="Riwayat simulasi"
           badge="7 hari"
-          message="Tidak ada anomali signifikan dalam seminggu terakhir"
+          message="Grafik ini menampilkan data contoh."
         />
 
         <section className="rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-4 shadow-sm">
@@ -55,7 +55,7 @@ export default function RiwayatPage() {
             <TrendChart data={stepsTrend} unit="langkah" color="#059669" bar />
           </div>
         </section>
-      </main>
+      </div>
     </>
   );
 }
