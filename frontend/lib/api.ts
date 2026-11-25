@@ -1,4 +1,5 @@
 import type { AlertItem, Vital, VitalTone } from './types';
+import type { Progress } from './trendSummary';
 
 /**
  * Backend base URL. Set NEXT_PUBLIC_JAGSI_API in .env.local to point the
@@ -8,6 +9,10 @@ export const API_BASE =
   process.env.NEXT_PUBLIC_JAGSI_API?.replace(/\/$/, '') ?? 'http://localhost:8000';
 
 export const DEVICE_ID = process.env.NEXT_PUBLIC_JAGSI_DEVICE_ID ?? 'jagsi-watch-01';
+
+export function fetchProgress(signal?: AbortSignal) {
+  return getJson<Progress>(`/api/devices/${DEVICE_ID}/progress`, signal);
+}
 
 /** A vital as the backend sends it. `value` is null when the sensor had no reading. */
 export interface ApiVital {
