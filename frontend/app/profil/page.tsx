@@ -12,9 +12,9 @@ const sensors = [
 export default function ProfilPage() {
   return (
     <>
-      <TopAppBar title="Profil & Sensor" subtitle={elder.name} online />
+      <TopAppBar title="Profil & perangkat" subtitle={elder.name + " · Data contoh"} />
 
-      <main className="space-y-4 px-4 pt-3">
+      <div className="jagsi-panels">
         {/* Profile card */}
         <section className="rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-4 shadow-sm">
           <div className="flex items-center gap-4">
@@ -145,7 +145,7 @@ export default function ProfilPage() {
             ))}
           </div>
         </section>
-      </main>
+      </div>
     </>
   );
 }
