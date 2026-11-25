@@ -2,6 +2,8 @@
 
 **Decision status: proposed.** Akhnaf owns the release decision. Rafi verifies persistence and inference. Akmal coordinates caregiver acceptance. Decide at the Saturday rehearsal using evidence from one candidate SHA, one simulated device and one source database.
 
+Partner instructions: [Rafi’s backend handoff](handoff-rafibusthami.md) and [Akmal’s dashboard handoff](handoff-akmalraflifauzan.md).
+
 ## Product outcome and decision criteria
 
 A presenter changes a Wokwi input and a caregiver sees the reading, receives a fall or SOS alert and acknowledges the correct event. The presenter can then show which cloud readings produced a trend. If a dependency fails, the caregiver can tell which functions still work and how old the displayed data are.
