@@ -10,18 +10,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: '#45608a',
+        primary: '#6a3de8',
         'on-primary': '#f8f8ff',
-        'primary-container': '#b2cdfe',
-        'on-primary-container': '#29446d',
-        'primary-dim': '#39547d',
-        'inverse-primary': '#b2cdfe',
+        'primary-container': '#e8dfff',
+        'on-primary-container': '#382169',
+        'primary-dim': '#4b27b7',
+        'inverse-primary': '#e8dfff',
 
-        background: '#f9f9fe',
-        'on-background': '#2f323b',
+        background: '#f5f1f8',
+        'on-background': '#211637',
 
-        surface: '#f9f9fe',
-        'on-surface': '#2f323b',
+        surface: '#f5f1f8',
+        'on-surface': '#211637',
         'on-surface-variant': '#5b5f68',
         'surface-container-lowest': '#ffffff',
         'surface-container-low': '#f2f3fb',
@@ -30,8 +30,8 @@ const config: Config = {
         'surface-container-highest': '#dfe2ed',
         'surface-variant': '#dfe2ed',
         'surface-dim': '#d7dae4',
-        'surface-bright': '#f9f9fe',
-        'surface-tint': '#45608a',
+        'surface-bright': '#f5f1f8',
+        'surface-tint': '#6a3de8',
 
         outline: '#777b84',
         'outline-variant': '#aeb2bc',
@@ -55,7 +55,7 @@ const config: Config = {
         'inverse-on-surface': '#9c9ca2',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Geist', 'sans-serif'],
       },
       borderRadius: {
         '2xl': '1rem',

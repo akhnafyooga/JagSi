@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Geist', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -14,4 +14,11 @@ body {
 
 .material-symbols-fill {
   font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+@layer components {
+  .jagsi-display { font-family: 'Bricolage Grotesque', 'Geist', sans-serif; }
+  .jagsi-panels {
+    @apply mx-auto grid max-w-7xl items-start gap-4 px-4 pb-12 md:grid-cols-2;
+  }
 }

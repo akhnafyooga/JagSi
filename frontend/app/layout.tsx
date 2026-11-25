@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { BottomNav } from '@/components/BottomNav';
+
 import { EmergencyAlertsProvider } from '@/components/EmergencyAlertsProvider';
 import { elder } from '@/lib/mock-data';
 
@@ -21,7 +21,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&amp;family=Geist:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <link
@@ -32,9 +32,9 @@ export default function RootLayout({
       <body className="bg-surface-container-low text-on-surface antialiased">
         {/* One alert WebSocket for the whole app, so the emergency screen shows on every page (#13). */}
         <EmergencyAlertsProvider elderName={elder.name}>
-          <div className="mx-auto flex min-h-screen max-w-[430px] flex-col bg-background shadow-xl">
-            <main className="flex-1 pb-24">{children}</main>
-            <BottomNav />
+          <div className="min-h-screen bg-background">
+            <main className="min-h-screen">{children}</main>
+
           </div>
         </EmergencyAlertsProvider>
       </body>

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Icon } from './Icon';
 
 const items = [
-  { href: '/', label: 'Beranda', icon: 'home' },
+  { href: '/beranda', label: 'Beranda', icon: 'home' },
   { href: '/monitoring', label: 'Monitoring', icon: 'monitor_heart' },
   { href: '/riwayat', label: 'Riwayat', icon: 'history' },
   { href: '/profil', label: 'Profil', icon: 'person' },
@@ -16,21 +16,21 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-[430px] border-t border-surface-container-highest bg-surface/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
+    <nav className="flex flex-wrap gap-1 border-y border-surface-container-highest bg-white px-3 md:border-0">
       {items.map((item) => {
         const active = pathname === item.href;
         return (
           <Link
             key={item.href}
-            href={item.href}
-            className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${
-              active ? 'text-primary' : 'text-on-surface-variant'
+            href={item.href} aria-current={active ? 'page' : undefined}
+            className={`flex min-h-11 items-center gap-1 rounded-xl px-2 text-xs font-medium transition-colors md:px-4 md:text-sm ${
+              active ? 'bg-primary-container text-primary' : 'text-on-surface-variant'
             }`}
           >
             <Icon
               name={item.icon}
               filled={active}
-              className={`text-[22px] ${active ? 'text-primary' : ''}`}
+              className={`text-[22px] ${active ? 'bg-primary-container text-primary' : ''}`}
             />
             {item.label}
           </Link>

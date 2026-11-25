@@ -1,45 +1,21 @@
-import { Icon } from './Icon';
+import Link from 'next/link';
+import { BottomNav } from './BottomNav';
 import { NotificationBell } from './NotificationBell';
 
-interface TopAppBarProps {
-  title: string;
-  subtitle?: string;
-  online?: boolean;
-}
-
-export function TopAppBar({ title, subtitle, online }: TopAppBarProps) {
+export function TopAppBar({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <header className="sticky top-0 z-40 flex w-full items-center justify-between bg-surface/95 px-4 py-2 shadow-sm backdrop-blur-md">
-      <div className="flex items-center gap-2.5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-container text-on-primary-container">
-          <Icon name="elderly" className="text-[24px]" />
+    <>
+      <header className="sticky top-0 z-40 border-b border-surface-container-highest bg-white">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2">
+          <Link href="/" className="text-xl font-bold text-primary">JagSi</Link>
+          <BottomNav />
+          <NotificationBell />
         </div>
-        <div className="flex flex-col">
-          <h1 className="text-lg font-semibold leading-tight tracking-tight text-primary">
-            {title}
-          </h1>
-          {subtitle ? (
-            <div className="mt-0.5 flex items-center gap-1.5">
-              <span className="text-xs text-on-surface-variant">
-                Monitoring: <strong className="font-semibold text-on-surface">{subtitle}</strong>
-              </span>
-              {online !== undefined && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium leading-none text-emerald-800">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                  {online ? 'Online' : 'Offline'}
-                </span>
-              )}
-            </div>
-          ) : null}
-        </div>
+      </header>
+      <div className="mx-auto max-w-7xl px-4 pb-4 pt-8 md:pt-12">
+        {subtitle && <p className="mb-2 text-sm text-on-surface-variant">{subtitle}</p>}
+        <h1 className="jagsi-display text-4xl font-semibold tracking-tight md:text-6xl">{title}</h1>
       </div>
-
-      <div className="flex items-center gap-2">
-        <NotificationBell />
-        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-surface-container-high ring-2 ring-surface-container-highest">
-          <Icon name="person" className="text-[22px] text-on-surface-variant" />
-        </div>
-      </div>
-    </header>
+    </>
   );
 }
