@@ -7,9 +7,9 @@ import { elder } from '@/lib/mock-data';
 export default function DaruratPage() {
   return (
     <>
-      <TopAppBar title="Peringatan & Darurat" subtitle={elder.name} online />
+      <TopAppBar title="Pusat darurat" subtitle={elder.name} />
 
-      <main className="space-y-4 px-4 pt-3">
+      <div className="jagsi-panels">
         {/* SOS button */}
         <section className="rounded-2xl border border-error/30 bg-error/5 p-4 text-center">
           <a
@@ -21,7 +21,7 @@ export default function DaruratPage() {
           </a>
           <h2 className="mt-3 text-base font-semibold text-on-surface">Panggilan Darurat</h2>
           <p className="mt-1 text-xs text-on-surface-variant">
-            Tekan dan tahan untuk memanggil ambulans / layanan gawat darurat (119).
+            Buka aplikasi telepon untuk menghubungi layanan darurat.
           </p>
         </section>
 
@@ -29,7 +29,7 @@ export default function DaruratPage() {
 
         {/* Live from the backend since Week 8 (issue #13); was mock data. */}
         <LiveAlertLog />
-      </main>
+      </div>
     </>
   );
 }
