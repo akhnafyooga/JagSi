@@ -91,8 +91,10 @@ def telemetry_to_vitals(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     spo2 = row.get("spo2")
     temp = row.get("body_temperature")
     batt = row.get("battery_level")
-    # The whole row can be simulated (presentation console / local sim feed),
-    # in which case every card is simulated, including body temperature.
+    # The whole row can be simulated (presentation console / local sim feed).
+    # Heart rate, SpO2 and battery ride potentiometers in Wokwi, so every feed
+    # is simulated for them. Body temperature comes from a real DS18B20 part,
+    # which stays non-simulated even when the host generates the row.
     row_simulated = bool(row.get("simulated"))
 
     return [
@@ -124,7 +126,7 @@ def telemetry_to_vitals(row: Dict[str, Any]) -> List[Dict[str, Any]]:
             icon="thermostat",
             tone=_band(temp, normal=(36.1, 37.5), warning=(35.5, 38.4)),
             reference="Acuan 36.1-37.5°C",
-            simulated=row_simulated or "temperature" in SIMULATED_IN_WOKWI,
+            simulated="temperature" in SIMULATED_IN_WOKWI,
         ),
         _vital(
             vid="battery",

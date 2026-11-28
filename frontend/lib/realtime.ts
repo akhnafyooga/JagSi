@@ -82,6 +82,7 @@ export interface AlertCopy {
 
 /** What the emergency screen and the browser notification say for one alert. */
 export function describeAlert(alert: ApiAlert, elderName: string): AlertCopy {
+  const sim = alert.source === 'presentation_simulation';
   if (alert.alert_type === 'manual_sos') {
     if (sim) {
       return {

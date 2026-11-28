@@ -139,7 +139,7 @@ def context_to_text(ctx: Dict[str, Any]) -> str:
         lines.append(f"Data terakhir ({latest['received_at']} UTC):")
         lines.append(f"- Detak jantung: {latest['heart_rate']} bpm{sim}, acuan istirahat 60-100")
         lines.append(f"- SpO2: {latest['spo2']} %{sim}, acuan di atas 95")
-        lines.append(f"- Suhu tubuh: {latest['body_temperature']} °C{sim}, acuan 36.1-37.5")
+        lines.append(f"- Suhu tubuh: {latest['body_temperature']} °C, acuan 36.1-37.5")
         lines.append(f"- Baterai: {latest['battery_level']} %{sim}")
     w = ctx["window"]
     if w["readings"]:
@@ -214,7 +214,7 @@ def rule_based_summary(ctx: Dict[str, Any]) -> str:
             parts.append(f"Tanda vital {name} terakhir dalam rentang acuan: {', '.join(vitals)}.")
 
     if latest["simulated"]:
-        parts.append("Semua angka di atas masih data simulasi, belum dari sensor asli.")
+        parts.append("Detak jantung, SpO2, dan baterai masih data simulasi, belum dari sensor asli.")
     if not open_alerts and not issues:
         parts.append("Tidak ada peringatan jatuh atau SOS yang belum ditangani.")
     real_open = [a for a in open_alerts if a["source"] != "presentation_simulation"]
