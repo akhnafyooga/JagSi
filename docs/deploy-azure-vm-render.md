@@ -2,6 +2,8 @@
 
 Baseline commit is `67c177a` on `development`. This is a fictional-data presentation deployment. The frontend runs on an Ubuntu VM managed by the team. FastAPI generates simulated readings on Render. Supabase handles Google sign-in. Wokwi, MQTT configuration and the cloud mirror are unnecessary for this smoke test.
 
+> **Deployed variant (28 November 2026):** the Render deployment failed, so FastAPI runs on the same Azure VM behind Nginx. See [`deploy-azure-vm.md`](deploy-azure-vm.md) for that runbook and [`evidence/azure-vm-deploy-2026-11-28.md`](evidence/azure-vm-deploy-2026-11-28.md) for the record. The steps below still apply when Render is used.
+
 ## 1. Choose the frontend hostname
 
 Choose an HTTPS hostname you control, such as `jagsi.example.com`. Reserve it now so Render and Supabase can use it. If using a private rehearsal, restrict access separately at the hosting layer. Use fictional records throughout because the current FastAPI telemetry endpoints lack per-account authorization.
@@ -19,6 +21,7 @@ Create a Python Web Service from the JagSi repository. Select `development` and 
 Set these environment variables. Replace the example frontend hostname with yours.
 
 ~~~dotenv
+PYTHON_VERSION=3.12.8
 JAGSI_LOCAL_VITALS=stable
 JAGSI_LOCAL_VITALS_SEED=42
 JAGSI_DEVICE_ID=jagsi-watch-01
@@ -26,7 +29,7 @@ JAGSI_DB_PATH=/tmp/jagsi-demo.db
 JAGSI_CORS_ORIGINS=https://jagsi.example.com
 ~~~
 
-Use one API worker so only one simulated producer runs. SQLite in /tmp is disposable. Record the Render HTTPS URL after deployment. [Render FastAPI guide](https://render.com/docs/deploy-fastapi) · [Render free service limits](https://render.com/docs/free)
+`PYTHON_VERSION` matches CI. The backend pins `numpy==2.1.3`, which does not install on Python 3.14. Use one API worker so only one simulated producer runs. SQLite in /tmp is disposable. Record the Render HTTPS URL after deployment. [Render FastAPI guide](https://render.com/docs/deploy-fastapi) · [Render free service limits](https://render.com/docs/free)
 
 ## 3. Configure Supabase and Google
 
@@ -48,6 +51,7 @@ nano .env.local
 ~~~dotenv
 NEXT_PUBLIC_JAGSI_API=https://YOUR-RENDER-SERVICE.onrender.com
 NEXT_PUBLIC_JAGSI_DEVICE_ID=jagsi-watch-01
+NEXT_PUBLIC_JAGSI_PROGRESS_SOURCE=local
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
 ~~~
