@@ -45,10 +45,19 @@ only). It can invoke direct methods but cannot create or delete devices.
 
 ## Cost: read this before choosing the tier
 
-| Tier | Messages per day | Enough for |
-|------|------------------|------------|
-| F1 (free) | 8,000 | about **1.5 hours** of the watch running (it sends ~1.5 messages/s: one motion window every second, telemetry every 2 s) |
-| S1 | 400,000 | all day, every day |
+| Tier | Messages per day | Billed in blocks of | Enough for |
+|------|------------------|---------------------|------------|
+| F1 (free) | 8,000 | **0.5 KB** | about **40 minutes** of the watch running with the motion stream on, about 4.4 hours with it off |
+| S1 | 400,000 | 4 KB | all day, every day |
+
+IoT Hub counts a message once for every started block. On F1 a motion window
+(about 1.2 kB) is 3 messages, while telemetry, status and events (under 0.5 kB) are
+1 each. The watch sends one motion window every second and telemetry every 2 s,
+so it uses about 3.5 messages a second, about 12,600 an hour. This was measured on
+28 November 2026: the hub's counter matched this calculation exactly (see
+[`evidence/azure-iot-hub-2026-11-28.md`](evidence/azure-iot-hub-2026-11-28.md)).
+Check it any time with `az iot hub show-quota-metrics -n <hub>`. The counter lags
+by a few minutes.
 
 The script defaults to F1. For a demo, run the watch only while presenting, or turn
 the motion stream off when it is not needed:
@@ -73,7 +82,24 @@ infra/azure/deploy.sh hub
 
 This creates resource group `jagsi-rg` in `southeastasia`, an IoT hub with a random
 suffix, a self-signed EC P-256 certificate for `jagsi-watch-01`, and registers the
-device by the certificate's thumbprint. It writes:
+device by the certificate's thumbprint.
+
+**Azure for Students:** the subscription has an "Allowed resource deployment
+regions" policy, and `southeastasia` is not on it. Pick a region that is both
+allowed and offers IoT Hub. On 28 November 2026 that was `japaneast` or
+`australiaeast`:
+
+```bash
+az policy assignment list --query "[].parameters.listOfAllowedLocations.value" -o tsv
+JAGSI_LOCATION=japaneast infra/azure/deploy.sh hub
+```
+
+New hubs are created with shared access policies switched off
+(`disableLocalAuth=true`). The script switches them back on, because the backend
+calls direct methods with the `service` policy key. The watch still logs in with
+its X.509 certificate only.
+
+It writes:
 
 | File | Contains | Commit? |
 |------|----------|---------|
@@ -148,4 +174,4 @@ infra/azure/deploy.sh teardown
 | `[MQTT] failed, state=5` | IoT Hub refused the device: certificate thumbprint does not match; re-run `deploy.sh hub` and paste the new `azure_config.h` |
 | `deploy.sh eventgrid` says HTTP 404 | backend not in azure mode: `backend.env` was not loaded |
 | HTTP 401 in the backend log | the `key` in the Event Grid URL does not match `JAGSI_EVENTGRID_KEY` |
-| Data stops after about an hour | F1 daily message quota used up; see the cost table |
+| Data stops after about 40 minutes | F1 daily message quota used up; see the cost table |
