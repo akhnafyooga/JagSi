@@ -84,4 +84,18 @@ describe('describeAlert', () => {
       'keyakinan 87%',
     );
   });
+
+  it('labels presentation simulations as drills, never as sensor events', () => {
+    const simSos = describeAlert(
+      makeAlert({ alert_type: 'manual_sos', source: 'presentation_simulation' }),
+      'Ibu Sari',
+    );
+    expect(simSos.title).toContain('Simulasi SOS');
+    expect(simSos.body).toContain('panel simulasi presentasi');
+
+    const simFall = describeAlert(makeAlert({ source: 'presentation_simulation' }), 'Ibu Sari');
+    expect(simFall.title).toContain('Simulasi jatuh');
+    expect(simFall.body).toContain('panel simulasi presentasi');
+    expect(simFall.body).not.toContain('Sensor gerak');
+  });
 });

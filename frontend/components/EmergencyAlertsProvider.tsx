@@ -14,6 +14,7 @@ import {
   type NotificationState,
 } from '@/lib/alarm';
 import { describeAlert } from '@/lib/realtime';
+import { useCaregiverProfile } from '@/lib/useCaregiverProfile';
 import { useEmergencyAlerts, type EmergencyAlerts } from '@/lib/useEmergencyAlerts';
 
 import { EmergencyAlertOverlay } from './EmergencyAlertOverlay';
@@ -38,6 +39,7 @@ export function useEmergencyAlertContext(): EmergencyAlertContext | null {
 
 interface ProviderProps {
   children: React.ReactNode;
+  /** Fallback name shown before sign-in or when auth is unconfigured. */
   elderName: string;
   /** For tests. */
   alarm?: Alarm;
@@ -49,6 +51,8 @@ interface ProviderProps {
  * emergency screen appears on every page, not just the one that fetched alerts.
  */
 export function EmergencyAlertsProvider({ children, elderName, alarm, createSocket }: ProviderProps) {
+  const profile = useCaregiverProfile();
+  const displayName = profile.wearerName ?? elderName;
   const alarmRef = useRef<Alarm | null>(alarm ?? null);
   const getAlarm = useCallback(() => {
     if (!alarmRef.current) alarmRef.current = createAlarm();
@@ -85,11 +89,11 @@ export function EmergencyAlertsProvider({ children, elderName, alarm, createSock
       // The overlay covers the page when it is visible; a system notification
       // matters when the caregiver is on another tab or app.
       if (typeof document !== 'undefined' && document.hidden) {
-        const copy = describeAlert(alert, elderName);
+        const copy = describeAlert(alert, displayName);
         showSystemNotification(copy.title, copy.body, alert.alert_id);
       }
     },
-    [ring, elderName],
+    [ring, displayName],
   );
 
   const alerts = useEmergencyAlerts({ onNewAlert, createSocket });
@@ -132,7 +136,7 @@ export function EmergencyAlertsProvider({ children, elderName, alarm, createSock
         <EmergencyAlertOverlay
           alert={current}
           others={alerts.open.length - 1}
-          elderName={elderName}
+          elderName={displayName}
           pending={alerts.pending.includes(current.alert_id)}
           ringing={ringing}
           onAcknowledge={(id) => void alerts.acknowledge(id)}

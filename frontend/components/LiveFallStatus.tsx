@@ -19,13 +19,14 @@ export function LiveFallStatus({ emergency = false }: { emergency?: boolean }) {
   }
   if (latest) {
     const sos = latest.alert_type === 'manual_sos';
+    const sim = latest.source === 'presentation_simulation';
     return (
       <FallStatusCard
         emergency={emergency}
         tone="critical"
-        status={sos ? 'SOS Ditekan' : 'Terdeteksi Jatuh'}
+        status={sos ? (sim ? 'Simulasi SOS' : 'SOS Ditekan') : (sim ? 'Simulasi Jatuh' : 'Terdeteksi Jatuh')}
         label="Status Gerak / Jatuh"
-        note={`Belum ditangani · ${formatTimestamp(latest.received_at)}`}
+        note={`${sim ? 'Latihan presentasi · ' : ''}Belum ditangani · ${formatTimestamp(latest.received_at)}`}
       />
     );
   }

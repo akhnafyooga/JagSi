@@ -55,12 +55,16 @@ export function AccountSetup() {
         }
         setStep(step + 1);
       } else {
-        if (!preview) throw new Error('Pemasangan perangkat fisik belum tersedia.');
-        const response = await fetch(API_BASE + '/api/demo-pair', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+        const session = preview ? null : (await auth?.getSession())?.data.session;
+        if (!preview && !session) throw new Error('Masuk dengan Google terlebih dahulu.');
+        const response = await fetch(API_BASE + (preview ? '/api/demo-pair' : '/api/hosted-demo-pair'), {
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: 'Bearer ' + session.access_token } : {}) },
           body: JSON.stringify({ code: String(fields.get('code')).trim() }),
         });
-        if (response.status === 409) { setStep(5); return; }
+        if (response.status === 409 && preview) { setStep(5); return; }
+        if (!preview && response.status === 401) throw new Error('Sesi Google kedaluwarsa. Masuk ulang lalu coba lagi.');
+        if (!preview && response.status === 409) throw new Error('Kode demo tidak cocok. Minta kode terbaru dari presenter.');
+        if (!preview && response.status === 404) throw new Error('Pemasangan hosted belum aktif di server ini. Buka /beranda langsung untuk demo.');
         if (!response.ok) throw new Error('Pemasangan gagal. Periksa koneksi API.');
         const result = await response.json();
         if (result.device_id !== DEVICE_ID) throw new Error('Perangkat berbeda dari konfigurasi dashboard.');

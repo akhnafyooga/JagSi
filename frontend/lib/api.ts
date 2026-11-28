@@ -56,7 +56,8 @@ export interface ApiAlert {
   alert_id: string;
   device_id: string;
   alert_type: 'fall_detected' | 'manual_sos';
-  source: 'device_rule' | 'ml';
+  /** 'presentation_simulation' comes from the demo console, never a sensor. */
+  source: 'device_rule' | 'ml' | 'presentation_simulation';
   status: 'unresolved' | 'acknowledged';
   timestamp: string;
   received_at: string;
@@ -101,6 +102,7 @@ const ALERT_LABEL: Record<ApiAlert['alert_type'], string> = {
 const SOURCE_LABEL: Record<ApiAlert['source'], string> = {
   device_rule: 'Deteksi perangkat',
   ml: 'Model AI',
+  presentation_simulation: 'Simulasi presentasi · bukan sensor',
 };
 
 export function toAlertItem(alert: ApiAlert): AlertItem {

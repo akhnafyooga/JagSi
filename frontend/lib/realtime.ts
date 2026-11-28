@@ -82,11 +82,26 @@ export interface AlertCopy {
 
 /** What the emergency screen and the browser notification say for one alert. */
 export function describeAlert(alert: ApiAlert, elderName: string): AlertCopy {
+  const sim = alert.source === 'presentation_simulation';
   if (alert.alert_type === 'manual_sos') {
+    if (sim) {
+      return {
+        title: `Simulasi SOS untuk ${elderName}`,
+        body: 'Tombol darurat tidak ditekan. Ini latihan dari panel simulasi presentasi. Segera cek kondisi beliau bila ini kejadian nyata.',
+        icon: 'sos',
+      };
+    }
     return {
       title: `${elderName} menekan tombol SOS`,
       body: 'Tombol darurat di jam tangan ditekan. Segera hubungi atau datangi beliau.',
       icon: 'sos',
+    };
+  }
+  if (sim) {
+    return {
+      title: `Simulasi jatuh untuk ${elderName}`,
+      body: 'Tidak ada benturan yang terdeteksi. Ini latihan dari panel simulasi presentasi.',
+      icon: 'personal_injury',
     };
   }
   const how =
