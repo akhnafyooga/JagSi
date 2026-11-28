@@ -222,6 +222,7 @@ server {
     server_name jagsi-demo-90ab.japaneast.cloudapp.azure.com;
 
     location /api/ {
+        client_max_body_size 15m;
         proxy_pass http://127.0.0.1:8000;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -349,3 +350,18 @@ az group delete -n jagsi-web-rg      # VM, disk, IP, firewall; the host name is 
 
 The IoT Hub from issue #8 is in a separate resource group (`jagsi-rg`, see
 [`azure-setup.md`](azure-setup.md)) and is not affected.
+
+
+### Enable hosted MCU scanning
+
+Install OpenCV's system dependency with `sudo apt-get install -y libgl1`.
+From the backend directory, install the OCR packages with
+`.venv/bin/pip install -r requirements-mcu.txt`.
+In `/etc/jagsi/backend.env`, set `JAGSI_HOSTED_MCU=1` and use the same
+`JAGSI_SUPABASE_URL` and `JAGSI_SUPABASE_PUBLISHABLE_KEY` as hosted pairing.
+Apply the API upload limit shown in the Nginx configuration to the active HTTPS
+server, then validate with `sudo nginx -t` and reload Nginx.
+Rebuild and restart the frontend and restart `jagsi-backend`.
+Leave `NEXT_PUBLIC_JAGSI_MCU_API` unset for the same-origin Azure deployment.
+A POST to /api/mcu/extract without a session should return HTTP 401.
+Sign in and scan a sample PNG to confirm the review table displays extracted rows.

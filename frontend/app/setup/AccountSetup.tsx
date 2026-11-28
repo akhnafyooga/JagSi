@@ -1,13 +1,10 @@
 'use client';
 
-import { createClient } from '@supabase/supabase-js';
+import { auth } from '@/lib/supabaseAuth';
 import { type FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { API_BASE, DEVICE_ID } from '@/lib/api';
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-const auth = url && key ? createClient(url, key, { auth: { flowType: 'pkce' } }).auth : null;
 const preview = process.env.NEXT_PUBLIC_JAGSI_PAIRING_PREVIEW === '1';
 
 export function AccountSetup() {

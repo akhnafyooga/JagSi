@@ -5,6 +5,8 @@ from functools import lru_cache
 
 from fastapi import APIRouter, HTTPException, Request
 
+from app.hosted_pairing import require_supabase_user
+
 router = APIRouter()
 LIMIT = 15 * 1024 * 1024
 # Keep specific labels first so glucose variants retain their context.
@@ -140,10 +142,19 @@ def extract(data):
 async def extract_mcu(request: Request):
     from starlette.concurrency import run_in_threadpool
 
-    if os.getenv("JAGSI_LOCAL_MCU") != "1" or not request.client or request.client.host not in {"127.0.0.1", "::1"}:
-        raise HTTPException(404)
-    if request.headers.get("origin") not in {"http://127.0.0.1:3095", "http://localhost:3095", "http://127.0.0.1:3096"}:
-        raise HTTPException(403)
+    local_preview = (
+        os.getenv("JAGSI_LOCAL_MCU") == "1"
+        and request.client
+        and request.client.host in {"127.0.0.1", "::1"}
+        and request.headers.get("origin") in {
+            "http://127.0.0.1:3095", "http://localhost:3095", "http://127.0.0.1:3096",
+        }
+    )
+    if not local_preview:
+        if os.getenv("JAGSI_HOSTED_MCU") != "1":
+            raise HTTPException(404, "Report scanning is unavailable. You can enter results manually.")
+        await require_supabase_user(request.headers.get("authorization", ""))
+
     data = bytearray()
     async for chunk in request.stream():
         if len(data) + len(chunk) > LIMIT:
@@ -154,6 +165,6 @@ async def extract_mcu(request: Request):
     try:
         return await run_in_threadpool(extract, bytes(data))
     except ImportError as exc:
-        raise HTTPException(503, "Local OCR dependencies are unavailable.") from exc
+        raise HTTPException(503, "OCR dependencies are unavailable.") from exc
     except Exception as exc:
         raise HTTPException(422, "Could not read this report. Try a clear photo or enter results manually.") from exc
