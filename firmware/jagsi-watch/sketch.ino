@@ -90,15 +90,11 @@
 #else
 #define MQTT_HOST       "broker.hivemq.com"   // public test broker (dummy data only!)
 #define MQTT_PORT       1883
-<<<<<<< HEAD
 #endif
-#define TOPIC_BASE      "jagsi/abal/v1/"
-=======
 // Shared demo prefix (wokwi-team-requirements.md section 4). Keep the trailing
 // slash. The backend must use exactly the same value in JAGSI_TOPIC_BASE.
 // If the team agrees on another token, change it here and in the backend only.
 #define TOPIC_BASE      "jagsi/abal/demo-wflx1f/v1/"
->>>>>>> origin/main
 
 // Pins
 #define PIN_I2C_SDA     21
@@ -165,20 +161,12 @@ Adafruit_MPU6050  mpu;
 OneWire           oneWire(PIN_ONEWIRE);
 DallasTemperature tempSensor(&oneWire);
 
-<<<<<<< HEAD
 // IoT Hub topics carry a property bag, so they are longer than the Week 6 ones.
 char topicTelemetry[128];
 char topicEvent[128];
 char topicStatus[128];
 char topicCmd[128];
 char topicMotion[128];
-=======
-char topicTelemetry[96];
-char topicEvent[96];
-char topicStatus[96];
-char topicCmd[96];
-char topicMotion[96];
->>>>>>> origin/main
 char clientId[40];
 #if JAGSI_AZURE
 char mqttUsername[128];
@@ -894,15 +882,12 @@ void setup() {
   mqtt.setCallback(onMqttMessage);
   mqtt.setBufferSize(2048);     // a 30-sample motion window is ~1.2 kB
   mqtt.setKeepAlive(15);        // broker sends the "offline" will after ~22 s of silence
-<<<<<<< HEAD
 #if JAGSI_AZURE
   mqtt.setSocketTimeout(10);    // a TLS handshake on the ESP32 can take a few seconds
 #endif
-=======
 
   Serial.printf("[BOOT] device=%s topics=%s%s/...\n", DEVICE_ID, TOPIC_BASE, DEVICE_ID);
   printHelp();
->>>>>>> origin/main
 }
 
 void loop() {
