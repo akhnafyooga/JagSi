@@ -14,6 +14,19 @@ export function fetchProgress(signal?: AbortSignal) {
   return getJson<Progress>(`/api/devices/${DEVICE_ID}/progress`, signal);
 }
 
+export interface HistoryPoint {
+  received_at: string;
+  heart_rate: number | null;
+  spo2: number | null;
+  body_temperature: number | null;
+}
+
+export function fetchHistory(signal?: AbortSignal) {
+  return getJson<{ points: HistoryPoint[] }>(
+    `/api/devices/${DEVICE_ID}/telemetry/history?limit=60`, signal,
+  );
+}
+
 /** A vital as the backend sends it. `value` is null when the sensor had no reading. */
 export interface ApiVital {
   id: string;

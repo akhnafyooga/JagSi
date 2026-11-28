@@ -35,6 +35,11 @@ export interface LiveVitals {
 }
 
 const REFRESH_MS = 5000;
+const MAX_READING_AGE_MS = 10000;
+
+function isFresh(timestamp: string | null) {
+  return timestamp !== null && Date.now() - Date.parse(timestamp) < MAX_READING_AGE_MS;
+}
 
 /**
  * Subscribes the dashboard to live telemetry.
@@ -74,7 +79,7 @@ export function useLiveVitals(): LiveVitals {
       everConnected.current = true;
       setState((prev) => ({
         ...prev,
-        connection,
+        connection: isFresh(payload.received_at) ? connection : 'stale',
         vitals: payload.vitals.map(toVital),
         usingMockData: false,
         lastUpdate: payload.received_at,
@@ -104,7 +109,7 @@ export function useLiveVitals(): LiveVitals {
     const loadOnce = async () => {
       try {
         const telemetry = await fetchLatestTelemetry(controller.signal);
-        applyTelemetry(telemetry, stream ? 'live' : 'stale');
+        applyTelemetry(telemetry, 'live');
       } catch (error) {
         if (controller.signal.aborted) return;
         markUnreachable(error instanceof Error ? error.message : 'backend unreachable');
@@ -119,6 +124,11 @@ export function useLiveVitals(): LiveVitals {
     };
 
     void loadOnce();
+    const freshness = setInterval(() => {
+      setState((previous) => previous.connection === 'live' && !isFresh(previous.lastUpdate)
+        ? { ...previous, connection: 'stale' }
+        : previous);
+    }, 1000);
 
     if (typeof EventSource !== 'undefined') {
       stream = new EventSource(STREAM_URL);
@@ -134,7 +144,7 @@ export function useLiveVitals(): LiveVitals {
         if (cancelled) return;
         setState((prev) => ({
           ...prev,
-          connection: prev.usingMockData ? prev.connection : 'live',
+          connection: prev.usingMockData ? prev.connection : isFresh(prev.lastUpdate) ? 'live' : 'stale',
           error: null,
         }));
       };
@@ -153,6 +163,7 @@ export function useLiveVitals(): LiveVitals {
       cancelled = true;
       controller.abort();
       stream?.close();
+      clearInterval(freshness);
       if (poll !== null) clearInterval(poll);
     };
   }, []);

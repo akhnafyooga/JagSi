@@ -21,7 +21,7 @@ export function TrendChart({
   const max = Math.max(...data.map((d) => d.value));
   const range = max - min || 1;
 
-  const x = (i: number) => pad + (i * (width - pad * 2)) / (data.length - 1);
+  const x = (i: number) => data.length === 1 ? width / 2 : pad + (i * (width - pad * 2)) / (data.length - 1);
   const y = (v: number) => height - pad - ((v - min) / range) * (height - pad * 2);
 
   if (bar) {
@@ -43,7 +43,7 @@ export function TrendChart({
             />
           );
         })}
-        {data.map((d, i) => (
+        {data.map((d, i) => d.label && (
           <text key={i} x={x(i)} y={height - 2} textAnchor="middle" className="fill-on-surface-variant" fontSize={9}>
             {d.label}
           </text>
@@ -71,7 +71,7 @@ export function TrendChart({
       {data.map((d, i) => (
         <circle key={i} cx={x(i)} cy={y(d.value)} r={2.5} fill={color} />
       ))}
-      {data.map((d, i) => (
+      {data.map((d, i) => d.label && (
         <text key={i} x={x(i)} y={height - 2} textAnchor="middle" className="fill-on-surface-variant" fontSize={9}>
           {d.label}
         </text>

@@ -31,13 +31,13 @@ const CONNECTION_CHIP = {
 export function LiveVitals() {
   const { connection, vitals, usingMockData, lastUpdate, deviceState, error } = useLiveVitals();
   const chip = CONNECTION_CHIP[connection];
-  const tone = usingMockData ? 'normal' : overallTone(vitals);
+  const tone = connection === 'stale' ? 'warning' : usingMockData ? 'normal' : overallTone(vitals);
 
   let message: string;
   if (usingMockData) {
     message = 'Backend belum terhubung. Angka di bawah adalah data contoh, bukan data perangkat.';
   } else if (connection === 'stale') {
-    message = `Data terakhir ${lastUpdate ? formatTimestamp(lastUpdate) : 'tidak diketahui'}. Aliran langsung sedang terputus.`;
+    message = `Data terakhir ${lastUpdate ? formatTimestamp(lastUpdate) : 'tidak diketahui'}. Menunggu pembacaan terbaru.`;
   } else {
     message = `Data terakhir diperbarui ${lastUpdate ? formatTimestamp(lastUpdate) : '--:--'}`;
   }
@@ -46,8 +46,8 @@ export function LiveVitals() {
     <>
       <StatusBanner
         tone={tone}
-        title={usingMockData ? 'Mode Data Demo' : BANNER_TITLE[tone]}
-        badge={usingMockData ? 'Demo' : 'Terpantau'}
+        title={usingMockData ? 'Mode Data Demo' : connection === 'stale' ? 'Pembacaan tertunda' : BANNER_TITLE[tone]}
+        badge={usingMockData ? 'Demo' : connection === 'stale' ? 'Tertunda' : 'Terpantau'}
         message={message}
       />
 
