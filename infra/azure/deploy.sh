@@ -16,9 +16,11 @@ RG="${JAGSI_RG:-jagsi-rg}"
 LOCATION="${JAGSI_LOCATION:-southeastasia}"
 HUB="${JAGSI_HUB:-}"
 DEVICE="${JAGSI_DEVICE:-jagsi-watch-01}"
-# F1 is free but capped at 8,000 messages a day. The watch sends about 1.5 a
-# second (one motion window + one telemetry every 2 s), so F1 runs out after
-# roughly 1.5 hours. Fine for setting up and demos; use S1 for longer runs.
+# F1 is free but capped at 8,000 messages a day, counted in 0.5 KB blocks. A
+# motion window (~1.2 kB, every second) is 3 messages, telemetry (every 2 s) is
+# 1, so the watch uses ~12,600 an hour and F1 runs out after about 40 minutes
+# (about 4.4 hours with the motion stream off). Fine for setting up and short
+# demos; use S1 (4 KB blocks, 400,000 a day) for longer runs.
 SKU="${JAGSI_SKU:-F1}"
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -63,6 +65,13 @@ cmd_hub() {
     # The free tier only allows 2 partitions.
     az iot hub create --name "$HUB" --resource-group "$RG" --location "$LOCATION" \
       --sku "$SKU" --partition-count 2 --only-show-errors -o none
+  fi
+  # New hubs are created with local (SAS) auth disabled. The backend invokes
+  # direct methods with the 'service' policy key, and this script registers the
+  # device with it, so turn it back on. Devices still log in with X.509 only.
+  if [[ "$(az iot hub show --name "$HUB" --query properties.disableLocalAuth -o tsv)" == "true" ]]; then
+    echo "enabling shared access policies (disableLocalAuth=false)"
+    az iot hub update --name "$HUB" --set properties.disableLocalAuth=false --only-show-errors -o none
   fi
 
   say "Device certificate for $DEVICE (self-signed, EC P-256)"
