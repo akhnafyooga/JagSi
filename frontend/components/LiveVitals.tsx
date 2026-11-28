@@ -2,6 +2,8 @@
 
 import { overallTone, formatTimestamp } from '@/lib/api';
 import { useLiveVitals } from '@/lib/useLiveVitals';
+import { useEffect, useState } from 'react';
+import { fetchHistory, type HistoryPoint } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 import { Icon } from './Icon';
@@ -42,8 +44,34 @@ export function LiveVitals() {
     message = `Data terakhir diperbarui ${lastUpdate ? formatTimestamp(lastUpdate) : '--:--'}`;
   }
 
+  const [history, setHistory] = useState<HistoryPoint[]>([]);
+  useEffect(() => {
+    const request = new AbortController();
+    fetchHistory(request.signal).then(result => {
+      if (!request.signal.aborted) setHistory(result.points);
+    }).catch(() => { if (!request.signal.aborted) setHistory([]); });
+    return () => request.abort();
+  }, [lastUpdate]);
+  const heart = vitals.find(v => v.id === 'heart-rate');
+  const end = Date.parse(history[history.length - 1]?.received_at ?? '');
+  const samples = history.filter(p => p.heart_rate !== null && Date.parse(p.received_at) >= end - 120000);
+  const values = samples.map(p => p.heart_rate as number);
+  const low = Math.min(...values) - 3;
+  const range = Math.max(...values) + 3 - low;
+  const start = Date.parse(samples[0]?.received_at ?? '');
+  const line = samples.map((p, i) => `${(Date.parse(p.received_at)-start)/Math.max(1,end-start)*600},${115-(values[i]-low)/range*110}`).join(' ');
+
   return (
     <>
+      <section className="ungu-heart">
+        <div className="flex items-center justify-between gap-2"><h2>Detak jantung · 2 menit</h2><small title={error ?? undefined}>{chip.label}{heart?.simulated && ' · Simulasi'}</small></div>
+        <p className="ungu-number">{heart?.value ?? '—'} <span>bpm</span></p>
+        <p>{heart?.statusLabel} · {lastUpdate ? formatTimestamp(lastUpdate) : 'Menunggu perangkat'}</p>
+        {!usingMockData && samples.length > 1 ? <figure>
+          <svg viewBox="0 0 600 120" preserveAspectRatio="none" role="img" aria-label="Tren detak jantung dari pembacaan tersimpan"><polyline points={line} fill="none" stroke="currentColor" strokeWidth="3" vectorEffect="non-scaling-stroke" /></svg>
+          <figcaption>{formatTimestamp(samples[0].received_at)} — {formatTimestamp(samples[samples.length-1].received_at)}</figcaption>
+        </figure> : <p className="my-6">Menunggu riwayat detak jantung.</p>}
+      </section>
       <StatusBanner
         tone={tone}
         title={usingMockData ? 'Mode Data Demo' : connection === 'stale' ? 'Pembacaan tertunda' : BANNER_TITLE[tone]}
@@ -54,7 +82,7 @@ export function LiveVitals() {
       <section className="space-y-2">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-semibold tracking-tight text-on-surface">
-            Live Vital Signs
+            Tanda vital
           </h2>
           <div className="flex items-center gap-1.5">
             {deviceState ? (

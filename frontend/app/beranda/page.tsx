@@ -11,21 +11,14 @@ export default function HomePage() {
     <>
       <TopAppBar title="Ringkasan hari ini" subtitle={elder.name} />
 
-      <div className="jagsi-panels">
-        {/*
-          Vital signs and the status banner are live from the backend as of
-          Week 6; the AI summary and chat are live as of Week 7 (issue #10);
-          the fall status card follows the alert WebSocket as of Week 8 (#13).
-        */}
-        <AlertSettingsCard compact />
-
-        <LiveVitals />
-
-        <LiveFallStatus />
-
-        <LiveAiSummary />
-
-        <ChatAssistant />
+      <div className="ungu-dashboard">
+        <div className="min-w-0"><LiveVitals /></div>
+        <aside className="ungu-stack">
+          <LiveAiSummary />
+          <ChatAssistant />
+          <LiveFallStatus />
+          <AlertSettingsCard compact />
+        </aside>
       </div>
     </>
   );

@@ -124,6 +124,19 @@ def _resolve(path: str) -> Path:
 
 
 @dataclass(frozen=True)
+class TrendConfig:
+    model_path: Path
+    max_age_s: float
+
+    @classmethod
+    def from_env(cls) -> "TrendConfig":
+        return cls(
+            _resolve(os.getenv("JAGSI_TREND_MODEL", "demo/artifacts/trend_model.joblib")),
+            float(os.getenv("JAGSI_PROGRESS_MAX_AGE_S", "10")),
+        )
+
+
+@dataclass(frozen=True)
 class CloudConfig:
     dsn: str
     source_id: str
@@ -416,7 +429,7 @@ def _finite(value: Any) -> bool:
     )
 
 
-def assess(rows: List[Dict[str, Any]], cfg: CloudConfig,
+def assess(rows: List[Dict[str, Any]], cfg: CloudConfig | TrendConfig,
            now: Optional[datetime] = None) -> Dict[str, Any]:
     """Checks a window of cloud readings, oldest first, before any prediction.
 
@@ -444,7 +457,7 @@ def assess(rows: List[Dict[str, Any]], cfg: CloudConfig,
     return {"state": "ok", "times": times, "values": values, "span": span}
 
 
-def predict(rows: List[Dict[str, Any]], cfg: CloudConfig,
+def predict(rows: List[Dict[str, Any]], cfg: CloudConfig | TrendConfig,
             now: Optional[datetime] = None) -> Dict[str, Any]:
     """Runs the trend model on 60 cloud readings (oldest first)."""
     import numpy as np

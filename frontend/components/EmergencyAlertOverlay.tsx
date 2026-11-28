@@ -46,13 +46,13 @@ export function EmergencyAlertOverlay({
   const shownVitals = VITAL_LABELS.filter(([key]) => typeof vitals[key] === 'number');
 
   return (
-    <div className="fixed inset-0 z-[60] mx-auto flex max-w-[430px] flex-col bg-error text-on-error">
+    <div className="fixed inset-0 z-[60] grid place-items-center overflow-y-auto bg-black/60 p-3">
       <div
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="emergency-title"
         aria-describedby="emergency-body"
-        className="flex flex-1 flex-col px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-10"
+        className="ungu-emergency w-full max-w-[390px] rounded-3xl bg-[#211337] p-6 text-[#f4eeff]"
       >
         <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider">
           <span className="inline-flex items-center gap-1.5">
@@ -62,9 +62,9 @@ export function EmergencyAlertOverlay({
           <span>Diterima {formatTimestamp(alert.received_at)}</span>
         </div>
 
-        <div className="mt-10 flex flex-col items-center text-center">
-          <div className="flex h-24 w-24 animate-pulse items-center justify-center rounded-full bg-on-error/15 ring-4 ring-on-error/40">
-            <Icon name={copy.icon} filled className="text-[56px]" />
+        <div className="mt-4 flex flex-col items-start">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-on-error/15 ring-4 ring-on-error/40">
+            <Icon name={copy.icon} filled className="text-[24px]" />
           </div>
           <h2 id="emergency-title" className="mt-6 text-2xl font-bold leading-tight">
             {copy.title}
@@ -92,7 +92,7 @@ export function EmergencyAlertOverlay({
           <p className="mt-4 text-center text-xs font-medium">+{others} peringatan lain menunggu</p>
         ) : null}
 
-        <div className="mt-auto space-y-3 pt-8">
+        <div className="ungu-emergency-actions">
           <button
             type="button"
             onClick={() => onAcknowledge(alert.alert_id)}
@@ -102,7 +102,7 @@ export function EmergencyAlertOverlay({
             <Icon name="check_circle" filled className="text-[22px]" />
             {pending ? 'Mengirim konfirmasi…' : 'Saya tangani'}
           </button>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="contents">
             <a
               href="tel:119"
               className="flex items-center justify-center gap-1.5 rounded-2xl border border-on-error/60 py-3 text-sm font-semibold"

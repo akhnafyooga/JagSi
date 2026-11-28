@@ -11,7 +11,8 @@ export const API_BASE =
 export const DEVICE_ID = process.env.NEXT_PUBLIC_JAGSI_DEVICE_ID ?? 'jagsi-watch-01';
 
 export function fetchProgress(signal?: AbortSignal) {
-  return getJson<Progress>(`/api/devices/${DEVICE_ID}/progress`, signal);
+  const route = process.env.NEXT_PUBLIC_JAGSI_PROGRESS_SOURCE === 'local' ? 'local-progress' : 'progress';
+  return getJson<Progress>(`/api/devices/${DEVICE_ID}/${route}`, signal);
 }
 
 export interface HistoryPoint {

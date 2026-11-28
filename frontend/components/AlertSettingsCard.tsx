@@ -8,7 +8,7 @@ import { Icon } from './Icon';
 const CONNECTION = {
   connecting: { label: 'Menghubungkan…', style: 'bg-surface-container-high text-on-surface-variant' },
   live: { label: 'Terhubung', style: 'bg-emerald-100 text-emerald-700' },
-  reconnecting: { label: 'Menyambung ulang', style: 'bg-amber-100 text-amber-700' },
+  reconnecting: { label: 'Menyambung ulang', style: 'bg-amber-100 text-current' },
   unsupported: { label: 'Tidak didukung', style: 'bg-surface-container-high text-on-surface-variant' },
 } as const;
 
@@ -33,10 +33,10 @@ export function AlertSettingsCard({ compact = false }: { compact?: boolean }) {
       <button
         type="button"
         onClick={() => void ctx.enableAlerts()}
-        className="flex w-full items-center gap-3 rounded-2xl border border-amber-300/70 bg-amber-50 p-3 text-left"
+        className="ungu-alarm flex items-center gap-3 p-4 text-left"
       >
-        <Icon name="notifications_active" className="text-[22px] text-amber-700" />
-        <span className="flex-1 text-xs text-amber-950">
+        <Icon name="notifications_active" className="text-[22px] text-current" />
+        <span className="flex-1 text-xs">
           <strong className="block text-sm">Aktifkan alarm darurat</strong>
           Supaya HP berbunyi saat Ibu jatuh atau menekan SOS.
         </span>
