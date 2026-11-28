@@ -1,6 +1,9 @@
+'use client';
+
 import { TopAppBar } from '@/components/TopAppBar';
 import { Icon } from '@/components/Icon';
 import { elder, emergencyContacts, medications } from '@/lib/mock-data';
+import { useCaregiverProfile } from '@/lib/useCaregiverProfile';
 
 const sensors = [
   { name: 'Sensor Detak Jantung', icon: 'favorite', status: 'Aktif' },
@@ -10,6 +13,9 @@ const sensors = [
 ];
 
 export default function ProfilPage() {
+  const { caregiverName, wearerName } = useCaregiverProfile();
+  const displayWearer = wearerName ?? elder.name;
+  const displayCaregiver = caregiverName ?? elder.caregiver;
   return (
     <>
       <TopAppBar title="Profil & perangkat" subtitle="Perangkat dan pengaturan perawatan · Data contoh" />
@@ -22,7 +28,7 @@ export default function ProfilPage() {
               <Icon name="person" className="text-[34px]" />
             </div>
             <div>
-              <h2 className="jagsi-display text-3xl font-semibold">{elder.name}</h2>
+              <h2 className="jagsi-display text-3xl font-semibold">{displayWearer}</h2>
               <p className="text-sm">
                 Akun pendamping keluarga
               </p>
@@ -38,7 +44,7 @@ export default function ProfilPage() {
             </div>
             <div className="flex justify-between">
               <dt className="text-on-surface-variant">Pengasuh utama</dt>
-              <dd >{elder.caregiver}</dd>
+              <dd >{displayCaregiver}</dd>
             </div>
           </dl>
         </section>

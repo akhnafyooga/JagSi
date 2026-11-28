@@ -67,6 +67,7 @@ def _vital(
     icon: str,
     tone: str,
     reference: str,
+    simulated: bool,
 ) -> Dict[str, Any]:
     return {
         "id": vid,
@@ -80,7 +81,7 @@ def _vital(
         "statusLabel": _STATUS_LABEL_ID[tone],
         "note": reference,
         "reference": reference,
-        "simulated": vid in SIMULATED_IN_WOKWI,
+        "simulated": simulated,
     }
 
 
@@ -90,6 +91,9 @@ def telemetry_to_vitals(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     spo2 = row.get("spo2")
     temp = row.get("body_temperature")
     batt = row.get("battery_level")
+    # The whole row can be simulated (presentation console / local sim feed),
+    # in which case every card is simulated, including body temperature.
+    row_simulated = bool(row.get("simulated"))
 
     return [
         _vital(
@@ -100,6 +104,7 @@ def telemetry_to_vitals(row: Dict[str, Any]) -> List[Dict[str, Any]]:
             icon="favorite",
             tone=_band(hr, normal=(60, 100), warning=(50, 120)),
             reference="Acuan istirahat 60-100 bpm",
+            simulated=row_simulated or "heart-rate" in SIMULATED_IN_WOKWI,
         ),
         _vital(
             vid="spo2",
@@ -109,6 +114,7 @@ def telemetry_to_vitals(row: Dict[str, Any]) -> List[Dict[str, Any]]:
             icon="water_drop",
             tone=_band(spo2, normal=(95, 100), warning=(91, 94)),
             reference="Acuan di atas 95%",
+            simulated=row_simulated or "spo2" in SIMULATED_IN_WOKWI,
         ),
         _vital(
             vid="temperature",
@@ -118,6 +124,7 @@ def telemetry_to_vitals(row: Dict[str, Any]) -> List[Dict[str, Any]]:
             icon="thermostat",
             tone=_band(temp, normal=(36.1, 37.5), warning=(35.5, 38.4)),
             reference="Acuan 36.1-37.5°C",
+            simulated=row_simulated or "temperature" in SIMULATED_IN_WOKWI,
         ),
         _vital(
             vid="battery",
@@ -127,5 +134,6 @@ def telemetry_to_vitals(row: Dict[str, Any]) -> List[Dict[str, Any]]:
             icon="battery_full",
             tone=_band(batt, normal=(51, 100), warning=(21, 50)),
             reference="Isi ulang di bawah 20%",
+            simulated=row_simulated or "battery" in SIMULATED_IN_WOKWI,
         ),
     ]

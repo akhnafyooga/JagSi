@@ -80,3 +80,13 @@ WantedBy=multi-user.target
 4. Record both deployment URLs, the Git SHA, and the observed results. Test the first request after an idle period before presenting because Render free services can sleep.
 
 Hosted MCU upload, remote presentation controls, physical watch provisioning and per-account telemetry authorization remain separate release gates. Supabase Postgres can be added for hosted history after the SQLite mirror has been configured and verified. The rehearsal above reads history from the API's local SQLite database.
+
+## Hosted simulated pairing
+
+Deploy both the frontend and API from the same revision. Leave NEXT_PUBLIC_JAGSI_PAIRING_PREVIEW unset in the hosted frontend. On Render, keep the simulated feed enabled and set JAGSI_SUPABASE_URL and JAGSI_SUPABASE_PUBLISHABLE_KEY to the same project used by the frontend. Configure JAGSI_HOSTED_PAIRING_SHA256 with the digest from the following command. Run it privately. Share the displayed code only with the presenter and enter only the digest into Render.
+
+~~~bash
+python -c 'import hashlib,secrets; code=secrets.token_urlsafe(18); print("Code:",code); print("Digest:",hashlib.sha256(code.encode()).hexdigest())'
+~~~
+
+After redeploying, sign in with Google, create the wearer, and redeem the code on the pairing screen. The same signed-in account can retry its redemption. A different account cannot claim a consumed code while the SQLite database retains the record. Rotate the code before each rehearsal when using ephemeral storage. This links the setup flow to the configured simulation device. Hosted MCU upload and account-level access controls for telemetry are separate release gates. Use fictional data.

@@ -139,8 +139,8 @@ def context_to_text(ctx: Dict[str, Any]) -> str:
         lines.append(f"Data terakhir ({latest['received_at']} UTC):")
         lines.append(f"- Detak jantung: {latest['heart_rate']} bpm{sim}, acuan istirahat 60-100")
         lines.append(f"- SpO2: {latest['spo2']} %{sim}, acuan di atas 95")
-        lines.append(f"- Suhu tubuh: {latest['body_temperature']} °C, acuan 36.1-37.5")
-        lines.append(f"- Baterai: {latest['battery_level']} %")
+        lines.append(f"- Suhu tubuh: {latest['body_temperature']} °C{sim}, acuan 36.1-37.5")
+        lines.append(f"- Baterai: {latest['battery_level']} %{sim}")
     w = ctx["window"]
     if w["readings"]:
         lines.append(f"Ringkasan {w['readings']} pembacaan terakhir ({w['from']} sampai {w['to']} UTC):")
@@ -155,8 +155,9 @@ def context_to_text(ctx: Dict[str, Any]) -> str:
         lines.append("Peringatan 24 jam terakhir:")
         for a in alerts[:10]:
             kind = "jatuh" if a["type"] == "fall_detected" else "tombol SOS"
+            sim = " (SIMULASI PRESENTASI)" if a["source"] == "presentation_simulation" else ""
             status = "SUDAH ditangani" if a["status"] == "acknowledged" else "BELUM ditangani"
-            lines.append(f"- {kind}, {a['time']} UTC, {status}")
+            lines.append(f"- {kind}{sim}, {a['time']} UTC, {status}")
     return "\n".join(lines)
 
 
@@ -175,11 +176,20 @@ def rule_based_summary(ctx: Dict[str, Any]) -> str:
     open_alerts = [a for a in ctx["alerts_24h"] if a["status"] != "acknowledged"]
     parts: List[str] = []
     if open_alerts:
-        kinds = {"jatuh" if a["type"] == "fall_detected" else "SOS" for a in open_alerts}
-        parts.append(
-            f"Ada {len(open_alerts)} peringatan {' dan '.join(sorted(kinds))} yang belum ditangani. "
-            f"Segera cek kondisi {name} secara langsung."
-        )
+        sim_open = [a for a in open_alerts if a["source"] == "presentation_simulation"]
+        real_open = [a for a in open_alerts if a["source"] != "presentation_simulation"]
+        if real_open:
+            kinds = {"jatuh" if a["type"] == "fall_detected" else "SOS" for a in real_open}
+            parts.append(
+                f"Ada {len(real_open)} peringatan {' dan '.join(sorted(kinds))} yang belum ditangani. "
+                f"Segera cek kondisi {name} secara langsung."
+            )
+        if sim_open:
+            kinds = {"jatuh" if a["type"] == "fall_detected" else "SOS" for a in sim_open}
+            parts.append(
+                f"Ada {len(sim_open)} latihan {' dan '.join(sorted(kinds))} dari panel simulasi presentasi "
+                f"yang belum ditangani (bukan kejadian sensor asli)."
+            )
 
     issues = []
     hr, spo2, temp = latest["heart_rate"], latest["spo2"], latest["body_temperature"]
@@ -204,10 +214,11 @@ def rule_based_summary(ctx: Dict[str, Any]) -> str:
             parts.append(f"Tanda vital {name} terakhir dalam rentang acuan: {', '.join(vitals)}.")
 
     if latest["simulated"]:
-        parts.append("Detak jantung dan SpO2 masih data simulasi, belum dari sensor asli.")
+        parts.append("Semua angka di atas masih data simulasi, belum dari sensor asli.")
     if not open_alerts and not issues:
         parts.append("Tidak ada peringatan jatuh atau SOS yang belum ditangani.")
-    if issues and not open_alerts:
+    real_open = [a for a in open_alerts if a["source"] != "presentation_simulation"]
+    if issues and not real_open:
         parts.append("Bila kondisi ini berlanjut atau lansia tampak tidak nyaman, hubungi tenaga kesehatan.")
     return " ".join(parts)
 

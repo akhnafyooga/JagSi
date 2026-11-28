@@ -641,3 +641,14 @@ async def demo_pair(request: Request):
     if expiry is None or expiry <= time.monotonic():
         raise HTTPException(409, "Kode tidak berlaku.")
     return {"device_id": settings.device_id, "simulated": True}
+
+class HostedPairingInput(BaseModel):
+    code: str = Field(min_length=20, max_length=32)
+
+
+@app.post("/api/hosted-demo-pair")
+async def hosted_demo_pair(body: HostedPairingInput, request: Request):
+    from .hosted_pairing import redeem
+
+    await redeem(body.code, request.headers.get("authorization", ""), store.path)
+    return {"device_id": settings.device_id, "simulated": True}
