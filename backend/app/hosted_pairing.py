@@ -14,12 +14,11 @@ import httpx
 from fastapi import HTTPException
 
 
-async def redeem(code, authorization, database):
-    digest = os.getenv("JAGSI_HOSTED_PAIRING_SHA256", "")
+async def require_supabase_user(authorization: str) -> str:
     url = os.getenv("JAGSI_SUPABASE_URL", "").rstrip("/")
     key = os.getenv("JAGSI_SUPABASE_PUBLISHABLE_KEY", "")
-    if not all((digest, url, key)) or not os.getenv("JAGSI_LOCAL_VITALS"):
-        raise HTTPException(404)
+    if not url or not key:
+        raise HTTPException(503, "Sign-in verification is unavailable.")
     if not authorization.startswith("Bearer "):
         raise HTTPException(401)
     try:
@@ -33,6 +32,16 @@ async def redeem(code, authorization, database):
         user_id = response.json()["id"]
     except (httpx.HTTPError, ValueError, KeyError):
         raise HTTPException(503, "Layanan autentikasi tidak tersedia.") from None
+    if not isinstance(user_id, str) or not user_id:
+        raise HTTPException(503, "Sign-in verification is unavailable.")
+    return user_id
+
+
+async def redeem(code, authorization, database):
+    digest = os.getenv("JAGSI_HOSTED_PAIRING_SHA256", "")
+    if not all((digest, os.getenv("JAGSI_SUPABASE_URL"), os.getenv("JAGSI_SUPABASE_PUBLISHABLE_KEY"), os.getenv("JAGSI_LOCAL_VITALS"))):
+        raise HTTPException(404)
+    user_id = await require_supabase_user(authorization)
     supplied = hashlib.sha256(code.encode()).hexdigest()
     if not hmac.compare_digest(supplied, digest):
         raise HTTPException(409, "Kode tidak berlaku.")

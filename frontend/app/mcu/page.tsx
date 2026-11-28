@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { auth } from '@/lib/supabaseAuth';
 import { API_BASE } from '@/lib/api';
 import Link from 'next/link';
 import { reviewedMcuKey } from '@/lib/dailyBrief';
@@ -26,11 +27,16 @@ export default function McuPage() {
     setError('');
     setBusy(true);
     try {
+      const token = (await auth?.getSession())?.data.session?.access_token;
       const response = await fetch((process.env.NEXT_PUBLIC_JAGSI_MCU_API ?? API_BASE) + '/api/mcu/extract', {
-        method: 'POST', body: file, signal: AbortSignal.timeout(120000),
+        method: 'POST', body: file,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        signal: AbortSignal.timeout(120000),
       });
+      if (response.status === 401) throw new Error('Sign in to JagSi again before scanning.');
+      if (response.status === 413) throw new Error('The upload exceeds the server size limit.');
       const result = await response.json();
-      if (!response.ok) throw new Error(result.detail);
+      if (!response.ok) throw new Error(result.detail || "Report processing failed.");
       setRows(result.rows);
       setLabDate('');
       setDateEvidence(result.date_evidence);
