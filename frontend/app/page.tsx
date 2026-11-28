@@ -15,10 +15,10 @@ const steps = [
 export default function LandingPage() {
   return (
     <>
-      <div className="landing-night">
+      <div className="landing-night landing-cover">
         <header className="landing-container landing-header">
           <a className="ungu-brand" href="/"><img src="/ungu/brand.svg" alt="" />JagSi</a>
-          <span>Jaga Lansia</span>
+          <Link href="/setup" className="landing-cta">Set up JagSi</Link>
         </header>
         <section className="landing-container landing-hero">
           <div>

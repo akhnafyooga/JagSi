@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Icon } from './Icon';
 
 const topics = [
   { question: 'Bagaimana membaca ringkasan AI?', answer: 'Buka Ringkasan AI di Beranda. JagSi membandingkan 60 pembacaan terakhir. Jika jumlahnya belum cukup, kartu menampilkan kemajuan pengumpulan data.' },
@@ -11,20 +12,20 @@ const topics = [
 export function ChatAssistant() {
   const [selected, setSelected] = useState<number | null>(null);
   return (
-    <section className="ungu-panel">
-      <h2 className="text-xl font-semibold">Asisten JagSi</h2>
-      <p className="my-3 text-sm text-on-surface-variant">Demo percakapan · Pilih pertanyaan untuk melihat jawaban contoh.</p>
-      <div className="ungu-stack">
+    <section className="ungu-panel ungu-assistant">
+      <h2 className="ungu-panel-title"><Icon name="forum" />Asisten JagSi</h2>
+      <p className="text-sm text-on-surface-variant">Demo percakapan · Pilih pertanyaan untuk melihat jawaban contoh.</p>
+      <div className="ungu-topic-list">
         {topics.map((topic, index) => (
           <button key={topic.question} type="button" aria-pressed={selected === index}
-            className="ungu-action"
+            className="ungu-topic"
             onClick={() => setSelected(index)}>
-            {topic.question}
+            <span>{topic.question}</span><Icon name="arrow_forward" />
           </button>
         ))}
       </div>
       <div aria-live="polite">
-        {selected !== null && <p className="mt-4 rounded-xl bg-surface-container p-4 text-sm">{topics[selected].answer}</p>}
+        {selected !== null && <p className="rounded-xl bg-primary-container p-4 text-sm">{topics[selected].answer}</p>}
       </div>
     </section>
   );

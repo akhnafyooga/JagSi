@@ -281,8 +281,7 @@ class HealthAssistant:
     def __init__(self, store: Store, settings: Any, gemini: Optional[GeminiClient] = None) -> None:
         self.store = store
         self.settings = settings
-        if gemini is None and settings.gemini_api_key:
-            gemini = GeminiClient(settings.gemini_api_key, settings.gemini_model, settings.gemini_timeout_s)
+        # Provider clients are never constructed from deployed credentials.
         self.gemini = gemini
         self._cache: Dict[str, Dict[str, Any]] = {}
         self._lock = threading.Lock()

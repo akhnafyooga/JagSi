@@ -49,3 +49,6 @@ backend/.env
 
 # Week 9 (#21): Supabase credentials stay on the backend machine only
 backend/.env.demo
+
+.venv-llm/
+/backend/ml/qwen-base.safetensors

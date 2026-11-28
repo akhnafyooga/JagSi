@@ -34,3 +34,16 @@ npm start
 In #29 record SHA, device, API and database target, build/test results, expected and observed behavior per scenario, timing and artifact links. Put screenshots and the backup clip in [demo evidence](evidence/wokwi-owned-ai/). Send API discrepancies to Rafi with the route, status, timestamp and ID. Send missing firmware events to Akhnaf with the trigger and run time.
 
 Give Akhnaf the replay sequence: vary a reading, show its trend window, trigger a fall, acknowledge it and verify persistence. Identify any failed or blocked segment before the [release decision](finalization-week.md). Example implementation commit: `feat(dashboard): display cloud-backed trend states`.
+
+## Updated handoff for the MCU and daily brief candidate
+
+Use the [candidate acceptance checklist](finalization-week.md) and the API examples from Rafi. Keep the trend endpoint as evidence for the watch model. Verify the daily brief card against the daily-brief endpoint.
+
+1. **Rehearse onboarding in a production build.** From landing and registration, verify upload appears before manual entry. Test a PDF, a photo, manual entry and no report. Edit a candidate row and verify Beranda receives it only after confirmation. Check retry, refresh, smartband guide, the three-second confirm transition and See live.
+2. **Trace the daily brief on screen.** Match every displayed value, unit and date to the API. Verify simulated, delayed and missing readings, both model and rules labels, and the alert-first version. Use the same data in two requests to verify that identical responses render identically. Test the reviewed-plan gate with Rafi.
+3. **Run Wokwi concurrently.** Change a vital, pause and resume the feed, trigger fall and SOS separately, and acknowledge from one tab. Verify the second tab and refreshed alert log converge on the same alert ID. Capture visible and audible behavior, including alarm opt-in. Measure fall delivery against the five-second target.
+4. **Capture evidence at 390, 768 and 1440 px.** Record the build and test output, screenshots for review and Beranda states, and a short backup walkthrough. Check keyboard focus and overflow. Attach the shared SHA, device ID, database target and per-case outcomes to [#29](https://github.com/akhnafyooga/JagSi/issues/29). Use `feat(dashboard): verify reviewed MCU flow` or `docs(dashboard): record caregiver rehearsal` as appropriate.
+
+## Current rehearsal priority
+
+Start from Rafi's tested API URL, candidate SHA and Wokwi device ID. Confirm a fictional MCU report and open Beranda. While Wokwi runs `scenario stable`, verify the readings change and remain labeled as simulated. Switch to `scenario rising_hr` and trace the updated watch value to the API while the confirmed MCU facts retain their own date. Pause and resume Wokwi to verify stale and recovered states. Run fall, SOS and acknowledgment separately. Post production-build output, screenshots, timing and the backup walkthrough in #29.

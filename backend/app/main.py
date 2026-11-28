@@ -38,13 +38,17 @@ import asyncio
 import hmac
 import json
 import logging
-from contextlib import asynccontextmanager
+import os
+import secrets
+import time
+from uuid import uuid4
+from contextlib import asynccontextmanager, suppress
 from typing import Any, Dict, List, Optional
 
 from fastapi import Body, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 
 from .ai_summary import HealthAssistant
 from .azure_iot import DirectMethodSender, EventGridError, parse_eventgrid
@@ -61,6 +65,8 @@ log = logging.getLogger("jagsi.api")
 
 store = Store(settings.db_path)
 hub = Hub()
+demo_controls = {}
+demo_codes = {}
 
 
 def _publish(event: Dict[str, Any]) -> None:
@@ -101,6 +107,24 @@ assistant = HealthAssistant(store, settings)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    profile = os.getenv("JAGSI_LOCAL_VITALS")
+    if profile:
+        from .simulated_vitals import PROFILES, stream
+
+        if profile not in PROFILES or not os.getenv("JAGSI_DB_PATH"):
+            raise RuntimeError("Set a valid JAGSI_LOCAL_VITALS profile and a dedicated JAGSI_DB_PATH.")
+        seed_text = os.getenv("JAGSI_LOCAL_VITALS_SEED")
+        seed = int(seed_text) if seed_text is not None else None
+        bridge.attach_loop(asyncio.get_running_loop())
+        demo_controls["profile"] = profile
+        task = asyncio.create_task(stream(store, _publish, settings.device_id, demo_controls, seed))
+        try:
+            yield
+        finally:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+        return
     bridge.attach_loop(asyncio.get_running_loop())
     bridge.start()
     try:
@@ -110,7 +134,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="JagSi API", version="0.2.0", lifespan=lifespan)
+from app.mcu import router as mcu_router
+
 app.include_router(cloud_router)
+app.include_router(mcu_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -320,6 +347,39 @@ async def ingest_eventgrid(request: Request, key: str = Query("")) -> Any:
 
 
 # -- AI health summary and chat (issue #10) ----------------------------------
+from datetime import date
+from pydantic import BaseModel, Field, ConfigDict, field_validator
+from .device_brief import device_brief
+
+
+class ReviewedLab(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    label: str = Field(min_length=1, max_length=120)
+    value: str = Field(min_length=1, max_length=48)
+    unit: str = Field(default="", max_length=32)
+    flag: str = Field(default="", max_length=16)
+
+
+    @field_validator("label", "value", "unit", "flag")
+    @classmethod
+    def single_line(cls, value):
+        if any(ord(char) < 32 for char in value):
+            raise ValueError("Reviewed fields must be single-line text.")
+        return value
+
+
+class BriefInput(BaseModel):
+    reviewed_rows: list[ReviewedLab] = Field(default_factory=list, max_length=100)
+    lab_date: Optional[date] = None
+
+
+@app.post("/api/devices/{device_id}/daily-brief")
+def daily_health_brief(device_id: str, body: BriefInput):
+    return device_brief(store, device_id, settings.elder_name,
+                        [row.model_dump() for row in body.reviewed_rows],
+                        body.lab_date.isoformat() if body.lab_date else None)
+
+
 @app.get("/api/devices/{device_id}/summary")
 def health_summary(device_id: str, refresh: bool = False) -> Dict[str, Any]:
     return assistant.summary(device_id, force=refresh)
@@ -500,3 +560,84 @@ async def alert_socket(ws: WebSocket) -> None:
         pass
     finally:
         hub.unsubscribe(sub)
+
+
+
+def require_demo_console(request: Request):
+    if (os.getenv("JAGSI_LOCAL_VITALS") is None or os.getenv("JAGSI_DEMO_CONSOLE") != "1"
+            or not request.client or request.client.host not in {"127.0.0.1", "::1"}
+            or request.headers.get("host") not in {"127.0.0.1:8013", "localhost:8013"}):
+        raise HTTPException(404)
+
+
+@app.get("/demo-console", response_class=HTMLResponse)
+def demo_console(request: Request):
+    require_demo_console(request)
+    return """<!doctype html><html lang="id"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>JagSi · Simulasi presentasi</title>
+<style>
+body{background:#f6f1fa;color:#24133d;font:16px system-ui;margin:0;padding:32px}
+main{max-width:660px;margin:auto}section{background:white;border-radius:18px;padding:20px;margin:16px 0}
+button{background:#6a3de8;color:white;border:0;border-radius:8px;font:inherit;padding:12px;margin:4px}
+button:focus-visible{outline:3px solid #24133d;outline-offset:2px}
+output{display:block;min-height:2rem;overflow-wrap:anywhere}
+</style><main><h1>Simulasi presentasi JagSi</h1><p>Semua bacaan dan peringatan dari panel ini adalah simulasi.</p>
+<section><h2>Bacaan jam</h2><button data-action="stable">Stabil / lanjutkan</button>
+<button data-action="attention">Perlu perhatian</button><button data-action="critical">Kritis</button>
+<button data-action="paused">Jeda bacaan</button></section>
+<section><h2>Peringatan</h2><button data-action="fall">Simulasikan jatuh</button>
+<button data-action="sos">Simulasikan SOS</button></section>
+<section><h2>Pemasangan</h2><button data-action="pairing">Buat kode smartband</button></section>
+<output aria-live="polite"></output></main>
+<script>
+document.querySelectorAll('button').forEach(button => button.onclick = async () => {
+  const output = document.querySelector('output');
+  button.disabled = true;
+  try {
+    const response = await fetch('/demo-console/' + button.dataset.action, {
+      method: 'POST', headers: {'X-JagSi-Console': '1'}
+    });
+    if (!response.ok) throw new Error('Aksi simulasi gagal');
+    const result = await response.json();
+    output.textContent = result.code ? 'Kode sekali pakai (5 menit): ' + result.code : 'Aktif: ' + result.status;
+  } catch (error) { output.textContent = error.message; }
+  finally { button.disabled = false; }
+});
+</script></html>"""
+
+
+@app.post("/demo-console/{action}")
+def demo_action(action: str, request: Request):
+    require_demo_console(request)
+    if request.headers.get("x-jagsi-console") != "1" or request.headers.get("origin") not in {
+        "http://127.0.0.1:8013", "http://localhost:8013"
+    }:
+        raise HTTPException(403)
+    if action in {"stable", "attention", "critical", "paused"}:
+        demo_controls["profile"] = action
+    elif action in {"fall", "sos"}:
+        alert_id = str(uuid4())
+        store.insert_alert(alert_id=alert_id, device_id=settings.device_id, alert_type="fall_detected" if action == "fall" else "manual_sos",
+                           source="presentation_simulation")
+        _publish({"type": "alert", "data": store.alert(alert_id)})
+    elif action == "pairing":
+        code = secrets.token_urlsafe(12)
+        demo_codes.clear()
+        demo_codes[code] = time.monotonic() + 300
+        return {"code": code}
+    else:
+        raise HTTPException(404)
+    return {"status": action}
+
+
+@app.post("/api/demo-pair")
+async def demo_pair(request: Request):
+    require_demo_console(request)
+    if request.headers.get("origin") not in settings.cors_origins:
+        raise HTTPException(403)
+    body = await request.json()
+    code = body.get("code") if isinstance(body, dict) else None
+    expiry = demo_codes.pop(code, None) if isinstance(code, str) else None
+    if expiry is None or expiry <= time.monotonic():
+        raise HTTPException(409, "Kode tidak berlaku.")
+    return {"device_id": settings.device_id, "simulated": True}

@@ -16,7 +16,7 @@ export default function ProfilPage() {
 
       <div className="ungu-dashboard">
         {/* Profile card */}
-        <section className="ungu-heart">
+        <section className="ungu-panel wrist-guide">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
               <Icon name="person" className="text-[34px]" />
@@ -44,13 +44,13 @@ export default function ProfilPage() {
         </section>
 
         {/* Sensor status */}
-        <section className="ungu-panel">
-          <h3 className="text-sm font-semibold text-on-surface">Status Sensor Smartwear</h3>
+        <section className="ungu-panel ungu-list-panel">
+          <h2 className="ungu-panel-title">Status Sensor Smartwear</h2>
           <div className="space-y-2">
             {sensors.map((s) => (
               <div
                 key={s.name}
-                className="flex items-center justify-between rounded-xl border border-surface-container-highest/60 bg-surface-container-lowest px-3 py-2.5"
+                className="ungu-profile-row"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-container text-on-surface-variant">
@@ -68,13 +68,13 @@ export default function ProfilPage() {
         </section>
 
         {/* Medication schedule */}
-        <section className="ungu-panel">
-          <h3 className="text-sm font-semibold text-on-surface">Jadwal & Pengingat Obat</h3>
+        <section className="ungu-panel ungu-list-panel">
+          <h2 className="ungu-panel-title">Jadwal & Pengingat Obat</h2>
           <div className="space-y-2">
             {medications.map((m) => (
               <div
                 key={m.id}
-                className="flex items-center justify-between rounded-xl border border-surface-container-highest/60 bg-surface-container-lowest px-3 py-2.5"
+                className="ungu-profile-row"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary-container text-on-secondary-container">
@@ -100,13 +100,13 @@ export default function ProfilPage() {
         </section>
 
         {/* Emergency contacts */}
-        <section className="ungu-panel">
-          <h3 className="text-sm font-semibold text-on-surface">Kontak Darurat Terhubung</h3>
+        <section className="ungu-panel ungu-list-panel">
+          <h2 className="ungu-panel-title">Kontak Darurat Terhubung</h2>
           <div className="space-y-2">
             {emergencyContacts.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between rounded-xl border border-surface-container-highest/60 bg-surface-container-lowest px-3 py-2.5"
+                className="ungu-profile-row"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-tertiary-container text-on-tertiary-container">
@@ -124,9 +124,9 @@ export default function ProfilPage() {
         </section>
 
         {/* Settings */}
-        <section className="ungu-panel pb-2">
-          <h3 className="text-sm font-semibold text-on-surface">Pengaturan & Asisten AI</h3>
-          <div className="rounded-xl border border-surface-container-highest/60 bg-surface-container-lowest px-3">
+        <section className="ungu-panel ungu-list-panel">
+          <h2 className="ungu-panel-title">Pengaturan & Asisten AI</h2>
+          <div className="ungu-profile-list">
             {[
               { icon: 'notifications_active', label: 'Notifikasi Darurat', value: 'Aktif' },
               { icon: 'auto_awesome', label: 'Asisten JagSi AI', value: 'Aktif' },

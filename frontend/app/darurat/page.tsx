@@ -12,18 +12,16 @@ export default function DaruratPage() {
       <div className="ungu-dashboard">
         <LiveFallStatus emergency />
         <div className="ungu-stack">
-        <section className="ungu-panel">
+        <section className="ungu-panel ungu-emergency-call">
+          <h2>Panggilan darurat</h2>
+          <p className="text-sm text-on-surface-variant">Buka aplikasi telepon untuk menghubungi layanan darurat.</p>
           <a
             href="tel:119"
             className="ungu-action text-error"
             aria-label="Panggil darurat"
           >
-            <Icon name="sos" filled className="text-[20px]" />
+            <Icon name="call" filled className="text-[20px]" /> Panggil 119
           </a>
-          <h2 className="mt-3 text-base font-semibold text-on-surface">Panggilan Darurat</h2>
-          <p className="mt-1 text-xs text-on-surface-variant">
-            Buka aplikasi telepon untuk menghubungi layanan darurat.
-          </p>
         </section>
 
         <AlertSettingsCard />

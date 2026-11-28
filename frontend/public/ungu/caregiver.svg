@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="302" height="160" viewBox="0 0 302 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Onboarding illustration">
+<path id="Vector" d="M151 148C188.555 148 219 117.555 219 80C219 42.4446 188.555 12 151 12C113.445 12 83 42.4446 83 80C83 117.555 113.445 148 151 148Z" fill="#33205A"/>
+<path id="Vector_2" d="M208 80C208 111.48 182.48 137 151 137C119.52 137 94 111.48 94 80C94 48.5198 119.52 23 151 23C182.48 23 208 48.5198 208 80Z" stroke="#653DA0"/>
+<path id="Vector_3" d="M188 39H114C106.268 39 100 45.268 100 53V107C100 114.732 106.268 121 114 121H188C195.732 121 202 114.732 202 107V53C202 45.268 195.732 39 188 39Z" fill="#211337" stroke-width="3" stroke="#BC9EFF"/>
+<path id="Vector_4" d="M133 78C138.523 78 143 73.5228 143 68C143 62.4772 138.523 58 133 58C127.477 58 123 62.4772 123 68C123 73.5228 127.477 78 133 78Z" fill="#BC9EFF"/>
+<path id="Vector_5" d="M115 101C127 81.6667 139 81.6667 151 101M161 75H185M161 89H179" stroke-width="3" stroke-linecap="round" stroke="#BC9EFF"/>
+</g>
+</svg>

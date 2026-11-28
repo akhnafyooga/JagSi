@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-28",
+  "branch": "feat/ungu-dashboard-controls",
+  "head": "9bceb32fb656cdf41908a3edeab4ab31413246f4",
+  "development": "a8209524ee17fe85ccf0f2e5deebc32e03ea7135",
+  "working_tree_dirty": true,
+  "frontend_watch_device": "jagsi-watch-01",
+  "scanner_runtime": {
+    "python": "3.12.16",
+    "packages": {
+      "PyMuPDF": "2.2",
+      "Pillow": "13.0.0",
+      "rapidocr-onnxruntime": "1.4.4",
+      "onnxruntime": "1.32.0",
+      "fastapi": "0.115.6",
+      "pydantic": "2.14.4"
+    }
+  },
+  "llm_runtime": {
+    "python": "3.12.16",
+    "packages": {
+      "torch": "2.15.0",
+      "transformers": "4.51.3",
+      "peft": "0.15.2"
+    }
+  },
+  "sha256": {
+    "backend/app/mcu.py": "1d84e9059252ad99ad36986e19966aec42f65301f911fff5ad30b6db2f39f1bc",
+    "backend/app/main.py": "7c2ad23db7b2a710959c5eb2025860b1004e9cf98cdd9d505c69d3c32d132aa2",
+    "backend/app/device_brief.py": "800006fa7ff3d09ecb5477e67e88d27725c54f2689566fdb2fa548141b4dcff4",
+    "backend/app/evidence_summary.py": "9ced25e3f590901d839e633e6187cb7dc5a9ac32fc90eabc79a6c79e9d79d9d6",
+    "backend/app/summary_order.json": "c7ed9ea3b10494a4fda622195548f1dab9e3b8e68d08b61ef109a2c295d07f80",
+    "backend/app/local_brief.py": "0c3b81d38a326265f11596038d5d6e2712e1805c1ed93290d195b2af2d55e1bd",
+    "backend/app/brief_worker.py": "63e1454c7d35e3bc74c511be4670dfcb354964fed4b29672ec8db11286566bb8",
+    "frontend/app/mcu/page.tsx": "7247b39237c8df2e8d100f9cb4926dc31915a8b7e7637e0572faf78deaa06748",
+    "frontend/app/beranda/page.tsx": "3dc05be5e1cd3e95ef8e1be0e1fa0df878bd4da7105aa657f80eaa41394762da",
+    "frontend/lib/dailyBrief.ts": "20b01b0995367d6a0cc52d2e28557a32d805abd8cf688bb4e4f6a2e5350118ee",
+    "frontend/lib/useAiSummary.ts": "cff4f613d854f9c10d973ae2723c8e0d081b9c7cce8889ae3802c0466cfc262f",
+    "frontend/components/AiHealthSummary.tsx": "aed07e3115fc3ce685103ab82ec07f6ef26d95addeb87ffaa4fffe3d2d5530b3",
+    "backend/data/llm/base/model.safetensors": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+    "backend/data/llm/adapter/adapter_model.safetensors": "9bdc9bc519fa59c85866dfd9642159b7d37fa949387060eb4a40045d6ac55455",
+    "backend/data/llm/adapter/adapter_config.json": "8304ea82112cae1e2ea828201efe8cad97c1a4e76596da654efec36939842d77"
+  }
+}

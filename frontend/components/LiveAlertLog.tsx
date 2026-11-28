@@ -44,7 +44,7 @@ export function LiveAlertLog() {
 
   if (failed && rows === null) {
     return (
-      <section id="log-kejadian" className="ungu-panel scroll-mt-28">
+      <section id="log-kejadian" className="ungu-panel ungu-list-panel scroll-mt-28">
         <Header badge="Data demo" />
         <p className="text-[11px] text-on-surface-variant">
           Backend belum terhubung. Daftar di bawah adalah contoh, bukan peringatan dari perangkat.
@@ -60,7 +60,7 @@ export function LiveAlertLog() {
 
   if (rows === null) {
     return (
-      <section id="log-kejadian" className="ungu-panel scroll-mt-28">
+      <section id="log-kejadian" className="ungu-panel ungu-list-panel scroll-mt-28">
         <Header />
         <p className="text-xs text-on-surface-variant">Memuat…</p>
       </section>
@@ -68,7 +68,7 @@ export function LiveAlertLog() {
   }
 
   return (
-    <section id="log-kejadian" className="ungu-panel scroll-mt-28">
+    <section id="log-kejadian" className="ungu-panel ungu-list-panel scroll-mt-28">
       <Header />
       {rows.length === 0 ? (
         <p className="rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-4 text-center text-xs text-on-surface-variant">
@@ -112,7 +112,7 @@ export function LiveAlertLog() {
 function Header({ badge }: { badge?: string }) {
   return (
     <div className="flex items-center justify-between">
-      <h2 className="text-base font-semibold tracking-tight text-on-surface">Riwayat Peringatan</h2>
+      <h2 className="ungu-panel-title">Riwayat Peringatan</h2>
       {badge ? (
         <span className="rounded-md bg-surface-container-high px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
           {badge}

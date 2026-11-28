@@ -42,7 +42,7 @@ const TONES: Record<FallTone, { chip: string; chipText: string; status: string; 
 export function FallStatusCard({ status, label, note, tone = 'normal', emergency = false }: FallStatusCardProps) {
   const t = TONES[tone];
   return (
-    <article className={emergency ? "ungu-heart ungu-stack" : "ungu-panel"}>
+    <article className={emergency ? "ungu-heart ungu-stack" : "ungu-panel ungu-fall"}>
       <small>{label} · {t.chipText}</small>
       <h2 className={tone === 'critical' ? 'text-error' : ''}>{status}</h2>
       <p>{note}</p>

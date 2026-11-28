@@ -1,0 +1,42 @@
+{
+  "cases": 300,
+  "checks": 4038,
+  "failed_cases": [
+    {
+      "case": "bench-42",
+      "watch": "fresh",
+      "sample": [
+        "2026-11-28T08:30:00Z",
+        false,
+        78,
+        97.5
+      ],
+      "alert": "none",
+      "request": {
+        "reviewed_rows": [],
+        "lab_date": null
+      },
+      "output": {
+        "text": "- **Kabar Ibu Sari hari ini.** Catatan jam pada 2026-11-28T08:30:00Z mencatat detak jantung 78 bpm, SpO2 97.5 %. Belum ada hasil MCU yang dikonfirmasi.\n- **Kebiasaan hari ini.** Ajak Ibu Sari mencatat kegiatan saat jam mengambil bacaan. Catatan ini membantu keluarga membandingkan bacaan saat istirahat dan saat bergerak.\n- **Pilihan makan.** Ikuti pola makan yang biasa dianjurkan untuk Ibu Sari. Data yang tersedia belum menjadi dasar untuk menyarankan pantangan khusus.",
+        "model": "JagSi rules",
+        "source": "rules"
+      },
+      "checks": {
+        "actual_adapter": false,
+        "repeat_identical": false,
+        "watch_available": true,
+        "simulated": true,
+        "delayed": true,
+        "lab_available": true,
+        "date": true,
+        "unknown_date": true,
+        "lab_evidence": true,
+        "alert_priority": true,
+        "food_constrained": true,
+        "bullet_count": true,
+        "detak jantung": true,
+        "SpO2": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,282 @@
+{
+  "matches": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "runs": [
+    [
+      {
+        "state": {
+          "watch": "aktual",
+          "alert": false,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tandai apakah NAME sedang duduk atau bergerak saat pengukuran.\n- **Pilihan makan.** Ikuti anjuran makan yang sudah diberikan kepada NAME. Belum ada dasar untuk pantangan tambahan."
+      },
+      {
+        "state": {
+          "watch": "aktual",
+          "alert": false,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tandai apakah NAME sedang duduk atau bergerak saat pengukuran.\n- **Pilihan makan.** Jika sesuai dengan anjuran makan NAME, pilih tahu kukus atau pepes ikan sebagai pengganti daging berlemak. Bahas hasil LDL saat kontrol berikutnya."
+      },
+      {
+        "state": {
+          "watch": "aktual",
+          "alert": true,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "aktual",
+          "alert": true,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "kosong",
+          "alert": false,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Ikuti anjuran makan yang sudah diberikan kepada NAME. Belum ada dasar untuk pantangan tambahan."
+      },
+      {
+        "state": {
+          "watch": "kosong",
+          "alert": false,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Jika sesuai dengan anjuran makan NAME, pilih tahu kukus atau pepes ikan sebagai pengganti daging berlemak. Bahas hasil LDL saat kontrol berikutnya."
+      },
+      {
+        "state": {
+          "watch": "kosong",
+          "alert": true,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "kosong",
+          "alert": true,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "simulasi",
+          "alert": false,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Ikuti anjuran makan yang sudah diberikan kepada NAME. Belum ada dasar untuk pantangan tambahan."
+      },
+      {
+        "state": {
+          "watch": "simulasi",
+          "alert": false,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Jika sesuai dengan anjuran makan NAME, pilih tahu kukus atau pepes ikan sebagai pengganti daging berlemak. Bahas hasil LDL saat kontrol berikutnya."
+      },
+      {
+        "state": {
+          "watch": "simulasi",
+          "alert": true,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "simulasi",
+          "alert": true,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "tertunda",
+          "alert": false,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Ikuti anjuran makan yang sudah diberikan kepada NAME. Belum ada dasar untuk pantangan tambahan."
+      },
+      {
+        "state": {
+          "watch": "tertunda",
+          "alert": false,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Jika sesuai dengan anjuran makan NAME, pilih tahu kukus atau pepes ikan sebagai pengganti daging berlemak. Bahas hasil LDL saat kontrol berikutnya."
+      },
+      {
+        "state": {
+          "watch": "tertunda",
+          "alert": true,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "tertunda",
+          "alert": true,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      }
+    ],
+    [
+      {
+        "state": {
+          "watch": "aktual",
+          "alert": false,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tandai apakah NAME sedang duduk atau bergerak saat pengukuran.\n- **Pilihan makan.** Ikuti anjuran makan yang sudah diberikan kepada NAME. Belum ada dasar untuk pantangan tambahan."
+      },
+      {
+        "state": {
+          "watch": "aktual",
+          "alert": false,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tandai apakah NAME sedang duduk atau bergerak saat pengukuran.\n- **Pilihan makan.** Jika sesuai dengan anjuran makan NAME, pilih tahu kukus atau pepes ikan sebagai pengganti daging berlemak. Bahas hasil LDL saat kontrol berikutnya."
+      },
+      {
+        "state": {
+          "watch": "aktual",
+          "alert": true,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "aktual",
+          "alert": true,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "kosong",
+          "alert": false,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Ikuti anjuran makan yang sudah diberikan kepada NAME. Belum ada dasar untuk pantangan tambahan."
+      },
+      {
+        "state": {
+          "watch": "kosong",
+          "alert": false,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Jika sesuai dengan anjuran makan NAME, pilih tahu kukus atau pepes ikan sebagai pengganti daging berlemak. Bahas hasil LDL saat kontrol berikutnya."
+      },
+      {
+        "state": {
+          "watch": "kosong",
+          "alert": true,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "kosong",
+          "alert": true,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "simulasi",
+          "alert": false,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Ikuti anjuran makan yang sudah diberikan kepada NAME. Belum ada dasar untuk pantangan tambahan."
+      },
+      {
+        "state": {
+          "watch": "simulasi",
+          "alert": false,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Jika sesuai dengan anjuran makan NAME, pilih tahu kukus atau pepes ikan sebagai pengganti daging berlemak. Bahas hasil LDL saat kontrol berikutnya."
+      },
+      {
+        "state": {
+          "watch": "simulasi",
+          "alert": true,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "simulasi",
+          "alert": true,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "tertunda",
+          "alert": false,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Ikuti anjuran makan yang sudah diberikan kepada NAME. Belum ada dasar untuk pantangan tambahan."
+      },
+      {
+        "state": {
+          "watch": "tertunda",
+          "alert": false,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Kebiasaan hari ini.** Tanyakan bagaimana perasaan NAME sebelum merencanakan aktivitas hari ini.\n- **Pilihan makan.** Jika sesuai dengan anjuran makan NAME, pilih tahu kukus atau pepes ikan sebagai pengganti daging berlemak. Bahas hasil LDL saat kontrol berikutnya."
+      },
+      {
+        "state": {
+          "watch": "tertunda",
+          "alert": true,
+          "ldl_high": false
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      },
+      {
+        "state": {
+          "watch": "tertunda",
+          "alert": true,
+          "ldl_high": true
+        },
+        "pattern": "- **Kabar NAME.** FACTS\n- **Langkah sekarang.** Segera cek keadaan NAME dan buka rincian peringatan."
+      }
+    ]
+  ]
+}

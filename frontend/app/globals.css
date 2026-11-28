@@ -191,3 +191,143 @@ body {
   }
   .desktop-nav-link:focus-visible { outline: 2px solid #d8c7f5; outline-offset: 2px; }
 }
+
+.onboarding-shell {
+  width: min(100% - 40px, 600px);
+  margin-inline: auto;
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 24px;
+  padding-block: clamp(26px, 4vw, 52px) 64px;
+}
+.onboarding-shell > :is(div, section) { width: 100%; min-width: 0; }
+.onboarding-shell h1 {
+  font: 600 clamp(38px, 5vw, 52px)/1.12 'Bricolage Grotesque', sans-serif;
+  letter-spacing: -.025em;
+}
+.onboarding-shell .ungu-panel { padding: 24px; gap: 16px; }
+.onboarding-shell :is(a,button,input):focus-visible { outline: 2px solid #693af5; outline-offset: 3px; }
+
+.wrist-guide {
+  background: #211337;
+  border-color: transparent;
+  color: #f4eeff;
+}
+.wrist-guide-counter {
+  color: #bc9eff;
+  font: 500 .75rem/1.4 Geist, sans-serif;
+  text-transform: uppercase;
+}
+.wrist-guide h2 { font-size: 26px; }
+.wrist-guide p { font-size: 15px; }
+.wrist-guide .ungu-action { min-height: 46px; }
+
+.ungu-canvas {
+  background-color: #f6f2fa;
+  background-image:
+    radial-gradient(ellipse at 82% 0%, #e7dbfc 0%, transparent 46%),
+    radial-gradient(circle, rgb(86 55 121 / 13%) .65px, transparent .85px);
+  background-size: 100% 720px, 16px 16px;
+  background-repeat: no-repeat, repeat;
+}
+
+.landing-cover {
+  background-image:
+    radial-gradient(ellipse at 72% 63%, rgb(113 71 192 / 32%), transparent 60%),
+    radial-gradient(circle, rgb(207 179 255 / 19%) .65px, transparent .85px);
+  background-size: 100% 100%, 18px 18px;
+}
+
+.ungu-page-heading h1,
+.onboarding-shell h1 {
+  font-family: 'Bricolage Grotesque', Geist, sans-serif;
+  font-weight: 700;
+  letter-spacing: -.055em;
+  line-height: .98;
+  text-wrap: balance;
+}
+
+.ungu-page-heading h1 { font-size: clamp(42px, 6vw, 86px); }
+.ungu-page-heading h1::after,
+.onboarding-shell h1::after {
+  content: "";
+  display: block;
+  width: 42px;
+  height: 4px;
+  margin-top: 18px;
+  border-radius: 99px;
+  background: #693af5;
+}
+
+.ungu-page-heading > p {
+  font-size: .8125rem;
+  font-weight: 600;
+  color: #5a4c69;
+}
+
+.landing-content h2 {
+  max-width: 19ch;
+  font-weight: 700;
+  letter-spacing: -.055em;
+  text-wrap: balance;
+}
+
+.ungu-panel-title { display: flex; align-items: center; gap: 10px; }
+.ungu-panel-title .material-symbols-outlined { color: #5b30b8; font-size: 24px; }
+.ungu-insight {
+  background: linear-gradient(145deg, #e5d7ff, #f5efff 76%);
+  border-color: #d6c4f2;
+}
+.ungu-insight-copy {
+  font: 500 clamp(19px, 2vw, 26px)/1.28 'Bricolage Grotesque', sans-serif;
+  max-width: 48ch;
+}
+.ungu-insight small { color: #513c6a; }
+.ungu-insight .ungu-action { background: #ffffffb3; }
+.ungu-assistant { border-top: 4px solid #b99ce9; }
+.ungu-topic-list { display: grid; }
+.ungu-topic {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #e9dff2;
+  padding: 12px 4px;
+  text-align: left;
+  font-weight: 600;
+  font-size: .875rem;
+}
+.ungu-topic:hover, .ungu-topic[aria-pressed="true"] { color: #5127ad; background: #f5efff; }
+.ungu-topic:focus-visible { outline: 2px solid #693af5; outline-offset: 2px; }
+.ungu-reading { background: linear-gradient(150deg, white 68%, #f1e8fc); }
+.ungu-fall { border-inline-start: 4px solid #a78ad5; }
+.ungu-history-tools { background: #efe6fa; border-color: #ddccec; }
+.ungu-list-panel h2 { font-size: 1.25rem; }
+.ungu-profile-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid #ede5f4;
+  padding-block: 12px;
+}
+.ungu-profile-list { border-top: 1px solid #ede5f4; }
+.ungu-emergency-call .ungu-action { gap: 8px; background: #fff1f3; border-color: #edc4cd; }
+
+.account-setup{background:#f6f1fa;color:#1c1326;display:flex;flex-direction:column;gap:22px;min-height:100svh;padding:28px 24px 32px}
+.account-setup.account-signin{background:#e4d6ff}
+.account-setup form,.account-hero{width:100%;max-width:490px}
+.account-setup form{display:grid;gap:18px;padding-block:24px}
+.account-setup h1{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:36px;line-height:1.15;font-weight:600}
+.account-setup p,.account-setup small{color:#5e546b}
+.account-hero{background:#24133d;border-radius:18px;height:132px;display:grid;place-items:center}
+.account-setup label{display:grid;gap:7px;font-size:14px}
+.account-setup :is(input:not([type=checkbox]),select){width:100%;min-height:48px;border:1px solid #ded3ef;border-radius:12px;padding:12px 14px;background:white}
+.account-setup .account-consent{display:flex;align-items:center;gap:10px}
+.account-action{display:flex;align-items:center;gap:10px;min-height:46px;background:#6a3de8;color:#faf7ff;border-radius:12px;padding:12px 20px;font-weight:600;text-align:left}
+.account-action:disabled{opacity:.65}
+.account-setup :is(button,input,select,a):focus-visible{outline:2px solid #6a3de8;outline-offset:3px}
+@media(min-width:768px){.account-setup{align-items:center;gap:36px;padding-top:54px}.account-hero{height:210px}.account-setup h1{font-size:46px}}

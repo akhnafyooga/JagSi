@@ -32,7 +32,7 @@ export default function RootLayout({
       <body className="bg-surface-container-low text-on-surface antialiased">
         {/* One alert WebSocket for the whole app, so the emergency screen shows on every page (#13). */}
         <EmergencyAlertsProvider elderName={elder.name}>
-          <div className="min-h-screen bg-background">
+          <div className="min-h-screen ungu-canvas">
             <main className="min-h-screen">{children}</main>
 
           </div>

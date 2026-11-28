@@ -16,7 +16,7 @@ const toneIcon: Record<Vital['tone'], string> = {
 
 export function VitalCard({ vital }: { vital: Vital }) {
   return (
-    <article className="ungu-panel min-w-0">
+    <article className="ungu-panel ungu-reading min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl', toneIcon[vital.tone])}>
           <Icon name={vital.icon} className="text-[20px]" />

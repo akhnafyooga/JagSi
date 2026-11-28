@@ -68,3 +68,22 @@ Track sign-off in [Rafi’s cloud verification issue](https://github.com/akhnafy
 Store dated, sanitized artifacts in [demo evidence](evidence/wokwi-owned-ai/). Use the [cloud validation guide](cloud-inference.md) and [model reproduction guide](../backend/ml/README.md). A handoff is ready when the recipient can replay the recorded steps on the candidate.
 
 Use `type(scope): short action`. Examples include `docs(demo): add rehearsal evidence`, `feat(api): expose demo trend status`, `fix(ui): clear stale state after reconnect`, `test(dashboard): cover SOS acknowledgment` and `chores(release): organize demo assets`.
+
+## End-to-end acceptance update after the MCU and daily brief benchmarks
+
+The current workspace evidence supports local integration sign-off. The final daily-brief run passed 4,038 checks over 300 cases. One transient rules fallback in the first run remains documented. The scanner matched eight rows and four date lines across four fictional reports. Treat those as extraction fixtures. The blind corpus, noisy reports, wearer association and full browser rehearsal are still open. [Daily brief results](daily-brief-input-quality.md) · [MCU release gates](mcu-scanning-onboarding-prd.md#validation-and-scoring)
+
+| Candidate gate | Owner | Evidence needed |
+| --- | --- | --- |
+| MCU upload, manual and no-report onboarding | Akmal | Production-build recording and test results from registration through See live. Show that edits appear in the brief only after confirmation. |
+| Report belongs to the monitored wearer | Rafi | Server-side ownership and association tests for authorized and wrong-wearer submissions before multi-user release. Use fictional reports in the preview. |
+| Grounded and permitted caregiver guidance | Rafi and Akmal | Match displayed facts to reviewed evidence. Verify that the current LDL preview wording is gated before release and that an active alert takes priority even if the worker or cloud is down. |
+| Watch freshness and cloud replay | Rafi | Match Wokwi readings to SQLite, Supabase and API timestamps. Record gaps, stale transitions, duplicate counts and restart recovery. |
+| Browser alert and recovery | Akmal | Record fall and SOS, audible opt-in, acknowledgment across tabs, stale recovery and measured fall delivery against five seconds. |
+| Independent AI and scanner validation | Akhnaf | Publish the blind-set scanner scores and independently labeled model sessions. Report failures and abstentions against each existing threshold. |
+
+Use one candidate SHA for the walkthrough. Include the device ID, model revision, database target and evidence links. Log each gate as passed, failed or blocked. Link partner results to #28 and #29, then record the integrated decision in #30. Existing acceptance thresholds still apply.
+
+### Sensor source for the current rehearsal
+
+Use the existing Wokwi firmware scenarios for watch inputs. Enter `scenario stable` in the Wokwi Serial Monitor to get continuously varying simulated heart rate, SpO₂ and temperature over the normal MQTT path. Use `scenario rising_hr`, `scenario falling_spo2` or `scenario rising_temperature` for deliberate changes. Verify the configured topic prefix and device ID match the API and dashboard. The daily brief takes the latest accepted watch sample. A trend check needs 60 valid readings at about two seconds each. Pause the simulation to exercise stale handling. Enter `scenario off` to return control to the virtual sensors while telemetry continues publishing. The firmware scenarios use their own baseline and jitter. The proposed HTML controls and threshold-band-preserving variation are tracked separately. [Firmware controls](../firmware/jagsi-watch/README.md) · [Stream prerequisites](wokwi-random-stream-prerequisites.md)

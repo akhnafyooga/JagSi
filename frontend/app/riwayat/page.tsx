@@ -39,12 +39,13 @@ export default function RiwayatPage() {
     <>
       <TopAppBar title="Riwayat kesehatan" subtitle="Jendela pembacaan tersimpan" />
       <div className="ungu-dashboard">
-        <section className="ungu-panel md:col-span-full">
+        <section className="ungu-panel ungu-history-tools md:col-span-full">
+          <h2>Rentang pembacaan</h2>
           <p className="text-sm">Perangkat {DEVICE_ID} · Maksimal 60 pembacaan terakhir</p>
           <button type="button" onClick={refresh} className="ungu-action">
             {failed ? 'Coba lagi' : 'Perbarui riwayat'}
           </button>
-          <p role="status">
+          <p role="status" className="empty:hidden">
             {failed ? 'Riwayat tidak tersedia.' : !points ? 'Memuat riwayat…' : points.length === 0 ? 'Belum ada pembacaan.' : ''}
           </p>
         </section>

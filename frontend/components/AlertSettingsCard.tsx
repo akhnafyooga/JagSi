@@ -46,9 +46,9 @@ export function AlertSettingsCard({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <section className="space-y-3 rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-4 shadow-sm">
+    <section className="ungu-panel ungu-list-panel">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-on-surface">Peringatan real-time</h2>
+        <h2 className="ungu-panel-title">Peringatan real-time</h2>
         <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider', conn.style)}>
           {conn.label}
         </span>

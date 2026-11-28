@@ -1,0 +1,15 @@
+{
+  "rows": 25,
+  "devices": 1,
+  "simulated_rows": 25,
+  "present": {
+    "heart_rate": 25,
+    "spo2": 25,
+    "body_temperature": 25
+  },
+  "invalid_receive_times": 0,
+  "consecutive_intervals": 24,
+  "median_interval_seconds": 12.0,
+  "max_interval_seconds": 175.0,
+  "intervals_at_least_10s": 14
+}

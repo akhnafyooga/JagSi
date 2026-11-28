@@ -1,0 +1,230 @@
+[
+  {
+    "person": "Sari Demo",
+    "format": "pdf",
+    "expected": [
+      [
+        "LDL cholesterol",
+        "142",
+        "mg/dL",
+        "<100",
+        "H"
+      ],
+      [
+        "Hemoglobin",
+        "11.2",
+        "g/dL",
+        "12-16",
+        "L"
+      ]
+    ],
+    "extracted": {
+      "rows": [
+        {
+          "group": "Lipid profile",
+          "label": "LDL cholesterol",
+          "source_label": "LDL cholesterol",
+          "page": 1,
+          "source": "LDL cholesterol 142 H mg/dL <100",
+          "value": "142",
+          "flag": "H",
+          "unit": "mg/dL",
+          "range": "<100"
+        },
+        {
+          "group": "Complete blood count",
+          "label": "Hemoglobin",
+          "source_label": "Hemoglobin",
+          "page": 1,
+          "source": "Hemoglobin 11.2 L g/dL 12-16",
+          "value": "11.2",
+          "flag": "L",
+          "unit": "g/dL",
+          "range": "12-16"
+        }
+      ],
+      "date_evidence": [
+        {
+          "page": 1,
+          "source": "Date collected 2026-05-02"
+        }
+      ],
+      "methods": [
+        "PDF text"
+      ]
+    },
+    "rows_match": true,
+    "date_match": true
+  },
+  {
+    "person": "Dedi Demo",
+    "format": "png",
+    "expected": [
+      [
+        "Fasting blood glucose",
+        "95",
+        "mg/dL",
+        "70-99",
+        ""
+      ],
+      [
+        "Creatinine",
+        "0.92",
+        "mg/dL",
+        "0.7-1.3",
+        ""
+      ]
+    ],
+    "extracted": {
+      "rows": [
+        {
+          "group": "Blood glucose",
+          "label": "Fasting blood glucose",
+          "source_label": "Glukosa puasa",
+          "page": 1,
+          "source": "Glukosa puasa 95 mg/dL 70-99",
+          "value": "95",
+          "flag": "",
+          "unit": "mg/dL",
+          "range": "70-99"
+        },
+        {
+          "group": "Kidney panel",
+          "label": "Creatinine",
+          "source_label": "Kreatinin",
+          "page": 1,
+          "source": "Kreatinin 0.92 mg/dL 0.7-1.3",
+          "value": "0.92",
+          "flag": "",
+          "unit": "mg/dL",
+          "range": "0.7-1.3"
+        }
+      ],
+      "date_evidence": [
+        {
+          "page": 1,
+          "source": "Tanggal pemeriksaan 2026-06-11"
+        }
+      ],
+      "methods": [
+        "Image OCR"
+      ]
+    },
+    "rows_match": true,
+    "date_match": true
+  },
+  {
+    "person": "Maya Demo",
+    "format": "jpeg",
+    "expected": [
+      [
+        "HbA1c",
+        "6.1",
+        "%",
+        "4.0-5.6",
+        "H"
+      ],
+      [
+        "Triglycerides",
+        "110",
+        "mg/dL",
+        "<150",
+        ""
+      ]
+    ],
+    "extracted": {
+      "rows": [
+        {
+          "group": "Blood glucose",
+          "label": "HbA1c",
+          "source_label": "HbA1c",
+          "page": 1,
+          "source": "HbA1c 6.1 H % 4.0-5.6",
+          "value": "6.1",
+          "flag": "H",
+          "unit": "%",
+          "range": "4.0-5.6"
+        },
+        {
+          "group": "Lipid profile",
+          "label": "Triglycerides",
+          "source_label": "Triglycerides",
+          "page": 1,
+          "source": "Triglycerides 110 mg/dL <150",
+          "value": "110",
+          "flag": "",
+          "unit": "mg/dL",
+          "range": "<150"
+        }
+      ],
+      "date_evidence": [
+        {
+          "page": 1,
+          "source": "Date collected 2026-07-20"
+        }
+      ],
+      "methods": [
+        "Image OCR"
+      ]
+    },
+    "rows_match": true,
+    "date_match": true
+  },
+  {
+    "person": "Arif Demo",
+    "format": "scan-pdf",
+    "expected": [
+      [
+        "LDL cholesterol",
+        "88",
+        "mg/dL",
+        "<100",
+        ""
+      ],
+      [
+        "ALT",
+        "24",
+        "U/L",
+        "7-56",
+        ""
+      ]
+    ],
+    "extracted": {
+      "rows": [
+        {
+          "group": "Lipid profile",
+          "label": "LDL cholesterol",
+          "source_label": "LDL cholesterol",
+          "page": 1,
+          "source": "LDL cholesterol 88 mg/dL <100",
+          "value": "88",
+          "flag": "",
+          "unit": "mg/dL",
+          "range": "<100"
+        },
+        {
+          "group": "Liver panel",
+          "label": "ALT",
+          "source_label": "ALT",
+          "page": 1,
+          "source": "ALT 24 U/L 7-56",
+          "value": "24",
+          "flag": "",
+          "unit": "U/L",
+          "range": "7-56"
+        }
+      ],
+      "date_evidence": [
+        {
+          "page": 1,
+          "source": "Date issued 2026-08-10"
+        }
+      ],
+      "methods": [
+        "Image OCR"
+      ]
+    },
+    "rows_match": true,
+    "date_match": true
+  }
+]

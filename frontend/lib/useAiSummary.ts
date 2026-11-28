@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fetchProgress, formatTimestamp } from './api';
-import { trendSummary } from './trendSummary';
+import { fetchDailyBrief } from './dailyBrief';
+
 
 export function useAiSummary() {
-  const [summary, setSummary] = useState<ReturnType<typeof trendSummary> | null>(null);
+  const [summary, setSummary] = useState<Awaited<ReturnType<typeof fetchDailyBrief>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const request = useRef<AbortController | null>(null);
@@ -14,10 +14,10 @@ export function useAiSummary() {
     if (request.current) return;
     const controller = new AbortController();
     request.current = controller;
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 75000);
     setLoading(true);
     try {
-      const next = trendSummary(await fetchProgress(controller.signal));
+      const next = await fetchDailyBrief(controller.signal);
       if (request.current === controller) {
         setSummary(next);
         setFailed(false);
@@ -38,7 +38,7 @@ export function useAiSummary() {
 
   useEffect(() => {
     void refresh();
-    const timer = setInterval(refresh, 5000);
+    const timer = setInterval(refresh, 60000);
     return () => {
       clearInterval(timer);
       request.current?.abort();
@@ -47,10 +47,10 @@ export function useAiSummary() {
   }, [refresh]);
 
   return {
-    text: summary?.text ?? (failed ? 'Ringkasan tren tidak tersedia.' : 'Memuat pembacaan…'),
-    badge: summary?.badge ?? 'Status pembacaan',
-    updatedAt: summary?.observedAt ? `Pembacaan terakhir ${formatTimestamp(summary.observedAt)}` : '',
-    simulated: summary?.simulated ?? false,
+    text: summary?.text ?? (failed ? 'Ringkasan harian belum tersedia.' : 'Memuat pembacaan…'),
+    badge: summary?.model ?? 'Status pembacaan',
+    updatedAt: '',
+    simulated: false,
     loading,
     refresh,
   };

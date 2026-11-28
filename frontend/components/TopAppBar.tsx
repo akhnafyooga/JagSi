@@ -12,7 +12,7 @@ export function TopAppBar({ title, subtitle }: { title: string; subtitle?: strin
           <NotificationBell />
         </div>
       </header>
-      <div className="mx-auto max-w-[1440px] px-[var(--jagsi-gutter)] pb-8 pt-10 md:pb-10 md:pt-14">
+      <div className="ungu-page-heading mx-auto max-w-[1440px] px-[var(--jagsi-gutter)] pb-8 pt-10 md:pb-10 md:pt-14">
         {subtitle && <p className="mb-3 text-sm text-on-surface-variant">{subtitle}</p>}
         <h1 className="jagsi-display text-4xl font-semibold tracking-tight md:text-6xl">{title}</h1>
       </div>
