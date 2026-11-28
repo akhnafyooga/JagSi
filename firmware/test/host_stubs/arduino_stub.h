@@ -32,6 +32,8 @@ inline void configTime(long, int, const char*, const char* = nullptr) {}
 struct SerialT {
   void begin(long) {}
   int printf(const char *fmt, ...) __attribute__((format(printf, 2, 3))) { return 0; }
+  int available() { return 0; }
+  int read() { return -1; }
   void println(const char*) {}
   void println() {}
   void print(const char*) {}
