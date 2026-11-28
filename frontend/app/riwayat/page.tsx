@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { TopAppBar } from '@/components/TopAppBar';
 import { TrendChart } from '@/components/TrendChart';
 import { DEVICE_ID, fetchHistory, formatTimestamp, type HistoryPoint } from '@/lib/api';
-import { elder } from '@/lib/mock-data';
+
 
 const metrics = [
-  { field: 'heart_rate', label: 'Detak jantung', unit: 'bpm', color: '#be123c' },
+  { field: 'heart_rate', label: 'Detak jantung', unit: 'bpm', color: '#bc9eff' },
   { field: 'spo2', label: 'Saturasi oksigen', unit: '%', color: '#0369a1' },
   { field: 'body_temperature', label: 'Suhu tubuh', unit: '°C', color: '#7c3aed' },
 ] as const;
@@ -37,11 +37,11 @@ export default function RiwayatPage() {
 
   return (
     <>
-      <TopAppBar title="Riwayat kesehatan" subtitle={elder.name} />
-      <div className="jagsi-panels">
-        <section className="rounded-2xl bg-white p-4 md:col-span-2">
+      <TopAppBar title="Riwayat kesehatan" subtitle="Jendela pembacaan tersimpan" />
+      <div className="ungu-dashboard">
+        <section className="ungu-panel md:col-span-full">
           <p className="text-sm">Perangkat {DEVICE_ID} · Maksimal 60 pembacaan terakhir</p>
-          <button type="button" onClick={refresh} className="mt-2 min-h-11 font-semibold text-primary">
+          <button type="button" onClick={refresh} className="ungu-action">
             {failed ? 'Coba lagi' : 'Perbarui riwayat'}
           </button>
           <p role="status">
@@ -60,7 +60,7 @@ export default function RiwayatPage() {
           }));
           const missing = points.length - samples.length;
           return (
-            <section key={field} className="rounded-2xl bg-white p-4">
+            <section key={field} className={field === "heart_rate" ? "ungu-heart" : "ungu-panel"} aria-label={label}>
               <h2 className="font-semibold">{label}</h2>
               {samples.length > 0 ? (
                 <p className="text-sm">Rata-rata {(samples.reduce((sum, point) => sum + point.value, 0) / samples.length).toFixed(1)} {unit}</p>

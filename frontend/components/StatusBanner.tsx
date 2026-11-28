@@ -4,14 +4,14 @@ import { Icon } from './Icon';
 
 const toneStyles: Record<VitalTone, { box: string; badge: string; icon: string; text: string; glyph: string }> = {
   normal: {
-    box: 'border-emerald-200/70 bg-emerald-50/80',
-    badge: 'bg-emerald-200/60 text-emerald-700',
-    icon: 'bg-emerald-100 text-emerald-700',
-    text: 'text-emerald-950',
+    box: 'border-surface-container-highest bg-white',
+    badge: 'bg-primary-container text-on-primary-container',
+    icon: 'bg-primary-container text-primary',
+    text: 'text-on-surface',
     glyph: 'verified_user',
   },
   warning: {
-    box: 'border-amber-200/70 bg-amber-50/80',
+    box: 'border-surface-container-highest bg-white',
     badge: 'bg-amber-200/60 text-amber-700',
     icon: 'bg-amber-100 text-amber-700',
     text: 'text-amber-950',
@@ -36,15 +36,15 @@ interface StatusBannerProps {
 export function StatusBanner({ tone, title, message, badge }: StatusBannerProps) {
   const s = toneStyles[tone];
   return (
-    <section className={cn('flex items-start gap-3 rounded-2xl border p-3.5 shadow-sm', s.box)}>
+    <section className={cn('my-6 flex items-start gap-3 rounded-[20px] border p-5', s.box)}>
       <div className={cn('mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full', s.icon)}>
         <Icon name={s.glyph} filled className="text-[22px]" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className={cn('text-sm font-semibold', s.text)}>{title}</h2>
           {badge ? (
-            <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider', s.badge)}>
+            <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider', s.badge)}>
               {badge}
             </span>
           ) : null}

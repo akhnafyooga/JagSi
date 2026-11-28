@@ -12,7 +12,7 @@ export default function HomePage() {
       <TopAppBar title="Ringkasan hari ini" subtitle={elder.name} />
 
       <div className="ungu-dashboard">
-        <div className="min-w-0"><LiveVitals /></div>
+        <div className="min-w-0"><LiveVitals dashboard /></div>
         <aside className="ungu-stack">
           <LiveAiSummary />
           <ChatAssistant />

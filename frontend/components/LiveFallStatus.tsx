@@ -9,18 +9,19 @@ import { FallStatusCard } from './FallStatusCard';
  * The fall card on the home page, driven by the alert WebSocket (issue #13).
  * Until Week 8 it always said "Aman" because it read the mock data.
  */
-export function LiveFallStatus() {
+export function LiveFallStatus({ emergency = false }: { emergency?: boolean }) {
   const ctx = useEmergencyAlertContext();
   const open = ctx?.open ?? [];
   const latest = open[0];
 
   if (!ctx || ctx.connection === 'unsupported') {
-    return <FallStatusCard tone="unknown" status="Tidak diketahui" label="Status Gerak / Jatuh" note="Browser tidak mendukung peringatan langsung" />;
+    return <FallStatusCard emergency={emergency} tone="unknown" status="Tidak diketahui" label="Status Gerak / Jatuh" note="Browser tidak mendukung peringatan langsung" />;
   }
   if (latest) {
     const sos = latest.alert_type === 'manual_sos';
     return (
       <FallStatusCard
+        emergency={emergency}
         tone="critical"
         status={sos ? 'SOS Ditekan' : 'Terdeteksi Jatuh'}
         label="Status Gerak / Jatuh"
@@ -29,7 +30,7 @@ export function LiveFallStatus() {
     );
   }
   if (ctx.connection !== 'live') {
-    return <FallStatusCard tone="unknown" status="Menunggu koneksi" label="Status Gerak / Jatuh" note="Peringatan langsung belum tersambung" />;
+    return <FallStatusCard emergency={emergency} tone="unknown" status="Menunggu koneksi" label="Status Gerak / Jatuh" note="Peringatan langsung belum tersambung" />;
   }
-  return <FallStatusCard tone="normal" status="Aman" label="Status Gerak / Jatuh" note="Tidak ada peringatan terbuka" />;
+  return <FallStatusCard emergency={emergency} tone="normal" status={emergency ? "Tidak ada SOS aktif" : "Aman"} label="Status Gerak / Jatuh" note="Tidak ada peringatan terbuka" />;
 }

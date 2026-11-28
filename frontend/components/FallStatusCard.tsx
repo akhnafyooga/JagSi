@@ -9,6 +9,7 @@ interface FallStatusCardProps {
   note: string;
   /** Week 8: the card now reflects live alerts instead of always showing "Normal". */
   tone?: FallTone;
+  emergency?: boolean;
 }
 
 const TONES: Record<FallTone, { chip: string; chipText: string; status: string; icon: string; glyph: string; iconBox: string }> = {
@@ -38,14 +39,14 @@ const TONES: Record<FallTone, { chip: string; chipText: string; status: string; 
   },
 };
 
-export function FallStatusCard({ status, label, note, tone = 'normal' }: FallStatusCardProps) {
+export function FallStatusCard({ status, label, note, tone = 'normal', emergency = false }: FallStatusCardProps) {
   const t = TONES[tone];
   return (
-    <article className="ungu-panel">
+    <article className={emergency ? "ungu-heart ungu-stack" : "ungu-panel"}>
       <small>{label} · {t.chipText}</small>
       <h2 className={tone === 'critical' ? 'text-error' : ''}>{status}</h2>
       <p>{note}</p>
-      <a className="ungu-action" href="/darurat">Lihat peringatan</a>
+      <a className="ungu-action" href={emergency ? "#log-kejadian" : "/darurat"}>{emergency ? "Lihat log kejadian" : "Lihat peringatan"}</a>
     </article>
   );
 }

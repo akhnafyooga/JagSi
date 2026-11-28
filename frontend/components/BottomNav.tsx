@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon } from './Icon';
@@ -15,22 +16,44 @@ const items = [
 export function BottomNav() {
   const pathname = usePathname();
 
+  const nav = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const track = nav.current;
+    const active = track?.querySelector<HTMLElement>('[aria-current=page]');
+    if (!track || !active) return;
+    const trackBounds = track.getBoundingClientRect();
+    const activeBounds = active.getBoundingClientRect();
+    track.scrollLeft += activeBounds.left - trackBounds.left - (track.clientWidth - activeBounds.width) / 2;
+  }, [pathname]);
+
   return (
-    <nav className="flex flex-wrap gap-1 border-y border-surface-container-highest bg-white px-3 md:border-0">
+    <nav ref={nav} aria-label="Navigasi utama" className="ungu-nav-track flex min-w-0 gap-1 overflow-x-auto p-1">
       {items.map((item) => {
         const active = pathname === item.href;
-        return (
+        const nav = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const track = nav.current;
+    const active = track?.querySelector<HTMLElement>('[aria-current=page]');
+    if (!track || !active) return;
+    const trackBounds = track.getBoundingClientRect();
+    const activeBounds = active.getBoundingClientRect();
+    track.scrollLeft += activeBounds.left - trackBounds.left - (track.clientWidth - activeBounds.width) / 2;
+  }, [pathname]);
+
+  return (
           <Link
             key={item.href}
             href={item.href} aria-current={active ? 'page' : undefined}
-            className={`flex min-h-11 items-center gap-1 rounded-xl px-2 text-xs font-medium transition-colors md:px-4 md:text-sm ${
-              active ? 'bg-primary-container text-primary' : 'text-on-surface-variant'
+            className={`flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 text-sm font-medium transition-colors md:px-4 ${
+              active ? 'bg-primary-container text-on-primary-container' : 'text-white hover:bg-white/10'
             }`}
           >
             <Icon
               name={item.icon}
               filled={active}
-              className={`text-[22px] ${active ? 'bg-primary-container text-primary' : ''}`}
+              className="text-[19px]"
             />
             {item.label}
           </Link>

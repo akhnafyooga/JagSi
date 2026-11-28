@@ -18,8 +18,8 @@ const BANNER_TITLE = {
 
 const CONNECTION_CHIP = {
   connecting: { label: 'Menghubungkan', style: 'bg-surface-container-high text-on-surface-variant' },
-  live: { label: 'Live', style: 'bg-emerald-100 text-emerald-700' },
-  stale: { label: 'Tertunda', style: 'bg-amber-100 text-amber-700' },
+  live: { label: 'Live', style: 'bg-primary-container text-on-primary-container' },
+  stale: { label: 'Tertunda', style: 'bg-amber-100 text-amber-900' },
   offline: { label: 'Data Demo', style: 'bg-surface-container-high text-on-surface-variant' },
 } as const;
 
@@ -30,7 +30,7 @@ const CONNECTION_CHIP = {
  * component. The connection state is shown on purpose: a caregiver must be able
  * to tell a reassuring reading from a reading that simply stopped arriving.
  */
-export function LiveVitals() {
+export function LiveVitals({ dashboard = false }: { dashboard?: boolean }) {
   const { connection, vitals, usingMockData, lastUpdate, deviceState, error } = useLiveVitals();
   const chip = CONNECTION_CHIP[connection];
   const tone = connection === 'stale' ? 'warning' : usingMockData ? 'normal' : overallTone(vitals);
@@ -64,7 +64,7 @@ export function LiveVitals() {
   return (
     <>
       <section className="ungu-heart">
-        <div className="flex items-center justify-between gap-2"><h2>Detak jantung · 2 menit</h2><small title={error ?? undefined}>{chip.label}{heart?.simulated && ' · Simulasi'}</small></div>
+        <div className="flex flex-wrap items-center justify-between gap-3"><h2>Detak jantung · 2 menit</h2><small title={error ?? undefined}>{chip.label}{heart?.simulated && ' · Simulasi'}</small></div>
         <p className="ungu-number">{heart?.value ?? '—'} <span>bpm</span></p>
         <p>{heart?.statusLabel} · {lastUpdate ? formatTimestamp(lastUpdate) : 'Menunggu perangkat'}</p>
         {!usingMockData && samples.length > 1 ? <figure>
@@ -72,16 +72,16 @@ export function LiveVitals() {
           <figcaption>{formatTimestamp(samples[0].received_at)} — {formatTimestamp(samples[samples.length-1].received_at)}</figcaption>
         </figure> : <p className="my-6">Menunggu riwayat detak jantung.</p>}
       </section>
-      <StatusBanner
+      {!dashboard && <div className="monitor-details"><StatusBanner
         tone={tone}
         title={usingMockData ? 'Mode Data Demo' : connection === 'stale' ? 'Pembacaan tertunda' : BANNER_TITLE[tone]}
         badge={usingMockData ? 'Demo' : connection === 'stale' ? 'Tertunda' : 'Terpantau'}
         message={message}
       />
 
-      <section className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-base font-semibold tracking-tight text-on-surface">
+      <section className="space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="jagsi-display text-2xl font-semibold text-on-surface">
             Tanda vital
           </h2>
           <div className="flex items-center gap-1.5">
@@ -106,8 +106,8 @@ export function LiveVitals() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          {vitals.map((vital) => (
+        <div className="grid grid-cols-1 gap-4 min-[375px]:grid-cols-2">
+          {vitals.filter(vital => vital.id !== 'heart-rate').map((vital) => (
             <VitalCard key={vital.id} vital={vital} />
           ))}
         </div>
@@ -116,7 +116,7 @@ export function LiveVitals() {
           Indikator, bukan diagnosis. Rentang acuan bersifat umum dan belum divalidasi klinis
           untuk lansia.
         </p>
-      </section>
+      </section></div>}
     </>
   );
 }
