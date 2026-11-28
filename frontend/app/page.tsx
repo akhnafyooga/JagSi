@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 const features = [
-  { title: 'Pemantauan vital', description: 'Detak, oksigen, dan suhu.', href: '/monitoring' },
+  { title: 'Pemantauan vital', description: 'Detak, oksigen, dan suhu.', href: '/beranda#tanda-vital' },
   { title: 'Ringkasan AI', description: 'Tren dari pembacaan sensor.', href: '/beranda' },
   { title: 'Peringatan keluarga', description: 'Tinjau kejadian SOS dan jatuh.', href: '/darurat' },
 ];

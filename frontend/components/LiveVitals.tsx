@@ -30,7 +30,7 @@ const CONNECTION_CHIP = {
  * component. The connection state is shown on purpose: a caregiver must be able
  * to tell a reassuring reading from a reading that simply stopped arriving.
  */
-export function LiveVitals({ dashboard = false }: { dashboard?: boolean }) {
+export function LiveVitals() {
   const { connection, vitals, usingMockData, lastUpdate, deviceState, error } = useLiveVitals();
   const chip = CONNECTION_CHIP[connection];
   const tone = connection === 'stale' ? 'warning' : usingMockData ? 'normal' : overallTone(vitals);
@@ -72,7 +72,7 @@ export function LiveVitals({ dashboard = false }: { dashboard?: boolean }) {
           <figcaption>{formatTimestamp(samples[0].received_at)} — {formatTimestamp(samples[samples.length-1].received_at)}</figcaption>
         </figure> : <p className="my-6">Menunggu riwayat detak jantung.</p>}
       </section>
-      {!dashboard && <div className="monitor-details"><StatusBanner
+      <div id="tanda-vital" className="monitor-details scroll-mt-28"><StatusBanner
         tone={tone}
         title={usingMockData ? 'Mode Data Demo' : connection === 'stale' ? 'Pembacaan tertunda' : BANNER_TITLE[tone]}
         badge={usingMockData ? 'Demo' : connection === 'stale' ? 'Tertunda' : 'Terpantau'}
@@ -116,7 +116,7 @@ export function LiveVitals({ dashboard = false }: { dashboard?: boolean }) {
           Indikator, bukan diagnosis. Rentang acuan bersifat umum dan belum divalidasi klinis
           untuk lansia.
         </p>
-      </section></div>}
+      </section></div>
     </>
   );
 }

@@ -6,8 +6,8 @@ export function TopAppBar({ title, subtitle }: { title: string; subtitle?: strin
   return (
     <>
       <header className="sticky top-0 z-40 px-4 pt-4 md:px-8 md:pt-6">
-        <div className="ungu-navbar mx-auto flex w-fit max-w-full items-center gap-2 rounded-full p-2">
-          <Link href="/" className="shrink-0 rounded-full bg-white/10 px-3 py-3 text-sm font-bold text-white"><span className="ungu-brand"><img src="/ungu/brand.svg" alt="" />JagSi</span></Link>
+        <div className="desktop-nav-shell flex w-fit max-w-full items-center gap-2">
+          <Link href="/" className="ungu-nav-pill shrink-0"><span className="ungu-brand"><img src="/ungu/brand.svg" alt="" />JagSi</span></Link>
           <BottomNav />
           <NotificationBell />
         </div>
