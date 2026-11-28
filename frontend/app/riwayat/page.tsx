@@ -1,60 +1,76 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { TopAppBar } from '@/components/TopAppBar';
-import { StatusBanner } from '@/components/StatusBanner';
 import { TrendChart } from '@/components/TrendChart';
-import { Icon } from '@/components/Icon';
-import { elder, heartRateTrend, spo2Trend, stepsTrend } from '@/lib/mock-data';
+import { DEVICE_ID, fetchHistory, formatTimestamp, type HistoryPoint } from '@/lib/api';
+
+
+const metrics = [
+  { field: 'heart_rate', label: 'Detak jantung', unit: 'bpm', color: '#bc9eff' },
+  { field: 'spo2', label: 'Saturasi oksigen', unit: '%', color: '#0369a1' },
+  { field: 'body_temperature', label: 'Suhu tubuh', unit: '°C', color: '#7c3aed' },
+] as const;
 
 export default function RiwayatPage() {
+  const [points, setPoints] = useState<HistoryPoint[]>();
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    const request = new AbortController();
+    fetchHistory(request.signal).then(({ points }) => {
+      if (!request.signal.aborted) {
+        setPoints([...points].sort((a, b) => Date.parse(a.received_at) - Date.parse(b.received_at)));
+      }
+    }).catch(() => {
+      if (!request.signal.aborted) setFailed(true);
+    });
+    return () => request.abort();
+  }, [attempt]);
+
+  function refresh() {
+    setPoints(undefined);
+    setFailed(false);
+    setAttempt((previous) => previous + 1);
+  }
+
   return (
     <>
-      <TopAppBar title="Riwayat kesehatan" subtitle={elder.name} />
-
-      <div className="jagsi-panels">
-        <StatusBanner
-          tone="normal"
-          title="Riwayat simulasi"
-          badge="7 hari"
-          message="Grafik ini menampilkan data contoh."
-        />
-
-        <section className="rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-on-surface">
-              <Icon name="favorite" className="text-[18px] text-rose-500" />
-              Tren Detak Jantung
-            </h3>
-            <span className="text-xs font-medium text-on-surface-variant">rata-rata 78 bpm</span>
-          </div>
-          <div className="mt-3">
-            <TrendChart data={heartRateTrend} unit="bpm" color="#e11d48" />
-          </div>
+      <TopAppBar title="Riwayat kesehatan" subtitle="Jendela pembacaan tersimpan" />
+      <div className="ungu-dashboard">
+        <section className="ungu-panel md:col-span-full">
+          <p className="text-sm">Perangkat {DEVICE_ID} · Maksimal 60 pembacaan terakhir</p>
+          <button type="button" onClick={refresh} className="ungu-action">
+            {failed ? 'Coba lagi' : 'Perbarui riwayat'}
+          </button>
+          <p role="status">
+            {failed ? 'Riwayat tidak tersedia.' : !points ? 'Memuat riwayat…' : points.length === 0 ? 'Belum ada pembacaan.' : ''}
+          </p>
         </section>
-
-        <section className="rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-on-surface">
-              <Icon name="water_drop" className="text-[18px] text-sky-500" />
-              Saturasi Oksigen
-            </h3>
-            <span className="text-xs font-medium text-on-surface-variant">rata-rata 98%</span>
-          </div>
-          <div className="mt-3">
-            <TrendChart data={spo2Trend} unit="%" color="#0ea5e9" />
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-on-surface">
-              <Icon name="directions_walk" className="text-[18px] text-emerald-600" />
-              Aktivitas Fisik & Langkah
-            </h3>
-            <span className="text-xs font-medium text-on-surface-variant">total minggu ini</span>
-          </div>
-          <div className="mt-3">
-            <TrendChart data={stepsTrend} unit="langkah" color="#059669" bar />
-          </div>
-        </section>
+        {points && points.length > 0 && metrics.map(({ field, label, unit, color }) => {
+          const samples = points.flatMap((point) => {
+            const value = point[field];
+            return typeof value === 'number' && Number.isFinite(value)
+              ? [{ value, time: point.received_at }] : [];
+          });
+          const chart = samples.map((sample, index) => ({
+            value: sample.value,
+            label: index === 0 || index === samples.length - 1 ? formatTimestamp(sample.time) : '',
+          }));
+          const missing = points.length - samples.length;
+          return (
+            <section key={field} className={field === "heart_rate" ? "ungu-heart" : "ungu-panel"} aria-label={label}>
+              <h2 className="font-semibold">{label}</h2>
+              {samples.length > 0 ? (
+                <p className="text-sm">Rata-rata {(samples.reduce((sum, point) => sum + point.value, 0) / samples.length).toFixed(1)} {unit}</p>
+              ) : <p className="text-sm">Belum ada nilai.</p>}
+              {missing > 0 ? (
+                <p className="text-sm">Grafik tidak tersedia karena {missing} pembacaan kosong.</p>
+              ) : <TrendChart data={chart} unit={unit} color={color} />}
+            </section>
+          );
+        })}
       </div>
     </>
   );

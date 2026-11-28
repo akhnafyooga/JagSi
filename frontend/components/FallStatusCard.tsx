@@ -9,6 +9,7 @@ interface FallStatusCardProps {
   note: string;
   /** Week 8: the card now reflects live alerts instead of always showing "Normal". */
   tone?: FallTone;
+  emergency?: boolean;
 }
 
 const TONES: Record<FallTone, { chip: string; chipText: string; status: string; icon: string; glyph: string; iconBox: string }> = {
@@ -38,26 +39,14 @@ const TONES: Record<FallTone, { chip: string; chipText: string; status: string; 
   },
 };
 
-export function FallStatusCard({ status, label, note, tone = 'normal' }: FallStatusCardProps) {
+export function FallStatusCard({ status, label, note, tone = 'normal', emergency = false }: FallStatusCardProps) {
   const t = TONES[tone];
   return (
-    <article className="rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-4 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl', t.iconBox)}>
-          <Icon name={tone === 'critical' ? 'personal_injury' : 'directions_walk'} className="text-[20px]" />
-        </div>
-        <span className={cn('rounded-full border px-2 py-0.5 text-xs font-semibold', t.chip)}>{t.chipText}</span>
-      </div>
-      <div className="mt-3">
-        <span className="text-xs font-medium text-on-surface-variant">{label}</span>
-        <div className="mt-0.5 flex items-baseline gap-1">
-          <span className={cn('text-2xl font-bold tracking-tight', t.status)}>{status}</span>
-        </div>
-      </div>
-      <div className="mt-2 flex items-center justify-between border-t border-surface-container-low pt-2 text-[11px] text-on-surface-variant/80">
-        <span>{note}</span>
-        <Icon name={t.glyph} filled className={cn('text-[16px]', t.icon)} />
-      </div>
+    <article className={emergency ? "ungu-heart ungu-stack" : "ungu-panel"}>
+      <small>{label} · {t.chipText}</small>
+      <h2 className={tone === 'critical' ? 'text-error' : ''}>{status}</h2>
+      <p>{note}</p>
+      <a className="ungu-action" href={emergency ? "#log-kejadian" : "/darurat"}>{emergency ? "Lihat log kejadian" : "Lihat peringatan"}</a>
     </article>
   );
 }

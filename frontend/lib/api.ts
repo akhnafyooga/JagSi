@@ -11,7 +11,21 @@ export const API_BASE =
 export const DEVICE_ID = process.env.NEXT_PUBLIC_JAGSI_DEVICE_ID ?? 'jagsi-watch-01';
 
 export function fetchProgress(signal?: AbortSignal) {
-  return getJson<Progress>(`/api/devices/${DEVICE_ID}/progress`, signal);
+  const route = process.env.NEXT_PUBLIC_JAGSI_PROGRESS_SOURCE === 'local' ? 'local-progress' : 'progress';
+  return getJson<Progress>(`/api/devices/${DEVICE_ID}/${route}`, signal);
+}
+
+export interface HistoryPoint {
+  received_at: string;
+  heart_rate: number | null;
+  spo2: number | null;
+  body_temperature: number | null;
+}
+
+export function fetchHistory(signal?: AbortSignal) {
+  return getJson<{ points: HistoryPoint[] }>(
+    `/api/devices/${DEVICE_ID}/telemetry/history?limit=60`, signal,
+  );
 }
 
 /** A vital as the backend sends it. `value` is null when the sensor had no reading. */

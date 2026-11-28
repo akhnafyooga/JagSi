@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 const features = [
-  { title: 'Pemantauan vital', description: 'Detak, oksigen, dan suhu.', href: '/monitoring' },
+  { title: 'Pemantauan vital', description: 'Detak, oksigen, dan suhu.', href: '/beranda#tanda-vital' },
   { title: 'Ringkasan AI', description: 'Tren dari pembacaan sensor.', href: '/beranda' },
   { title: 'Peringatan keluarga', description: 'Tinjau kejadian SOS dan jatuh.', href: '/darurat' },
 ];
@@ -15,54 +15,41 @@ const steps = [
 export default function LandingPage() {
   return (
     <>
-      <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-        <Link href="/" className="text-xl font-bold text-primary">JagSi</Link>
-        <Link href="/beranda" className="rounded-xl bg-primary px-4 py-3 font-semibold text-white">
-          Buka dashboard
-        </Link>
-      </header>
-      <section className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-12 md:grid-cols-2 md:py-20">
-        <div>
-          <h1 className="jagsi-display text-5xl font-semibold tracking-tight md:text-7xl">Jaga Lansia</h1>
-          <p className="mt-4 max-w-md text-lg text-on-surface-variant">
-            Tanda vital, tren, dan peringatan dalam satu tempat — untuk keluarga yang menjaga dari jauh.
-          </p>
-          <Link href="/beranda" className="mt-6 inline-flex rounded-xl bg-primary px-5 py-3 font-semibold text-white">
-            Buka dashboard <span aria-hidden="true" className="ml-2">→</span>
-          </Link>
-        </div>
-        <div className="rounded-3xl bg-[#211637] p-6 text-white md:p-10">
-          <p className="text-sm text-[#e8dfff]">JagSi Watch · Data simulasi</p>
-          <p className="mt-5 text-sm">Detak jantung</p>
-          <p className="jagsi-display text-7xl font-semibold">94 <span className="text-xl">bpm</span></p>
-          <dl className="mt-6 grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-[#33205a] p-4"><dt>Oksigen darah</dt><dd>98%</dd></div>
-            <div className="rounded-xl bg-[#33205a] p-4"><dt>Suhu tubuh</dt><dd>36,6 °C</dd></div>
-          </dl>
-          <p className="mt-4 text-sm">Peringatan · Belum ada SOS</p>
-        </div>
-      </section>
-      <section className="mx-auto max-w-7xl px-5 pb-12">
-        <h2 className="jagsi-display text-3xl font-semibold">Yang bisa Anda pantau</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {features.map(({ title, description, href }) => (
-            <Link key={href} href={href} className="rounded-2xl border border-surface-container-highest bg-white p-5 hover:border-primary">
-              <h3 className="text-xl font-semibold">{title}</h3>
-              <p className="mt-2 text-on-surface-variant">{description}</p>
-              <span className="mt-4 block font-semibold text-primary">Lihat fitur →</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-      <section className="bg-primary-container">
-        <div className="mx-auto max-w-7xl px-5 py-10">
-          <h2 className="jagsi-display text-3xl font-semibold">Dari sensor ke tindakan</h2>
-          <ol className="mt-5 grid list-inside list-decimal gap-4 md:grid-cols-3">
-            {steps.map((step) => <li key={step} className="rounded-xl bg-white p-4">{step}</li>)}
-          </ol>
-        </div>
-      </section>
-      <footer className="mx-auto max-w-7xl px-5 py-6 text-sm">JagSi · Data simulasi</footer>
+      <div className="landing-night">
+        <header className="landing-container landing-header">
+          <a className="ungu-brand" href="/"><img src="/ungu/brand.svg" alt="" />JagSi</a>
+          <span>Jaga Lansia</span>
+        </header>
+        <section className="landing-container landing-hero">
+          <div>
+            <small>JagSi Watch · Data simulasi</small>
+            <h1>Pantau orang <em>tersayang.</em></h1>
+            <p>Tanda vital, tren, dan peringatan dalam satu tempat — untuk keluarga yang menjaga dari jauh.</p>
+            <Link className="landing-cta" href="/beranda">Buka dashboard →</Link>
+          </div>
+          <div className="landing-watch" aria-label="Contoh pembacaan JagSi Watch">
+            <div className="watch-strap" />
+            <div className="watch-face"><small>Detak</small><strong>94 <span>bpm</span></strong><img src="/ungu/pulse.svg" alt="" /><small>09.42 · Simulasi</small></div>
+            <div className="watch-card watch-oxygen"><small>Oksigen darah</small><strong>98%</strong></div>
+            <div className="watch-card watch-temp"><small>Suhu tubuh</small><strong>36,6 °C</strong></div>
+            <div className="watch-card watch-alert"><small>Peringatan</small><strong>Belum ada SOS</strong><span>Aman</span></div>
+          </div>
+        </section>
+      </div>
+      <div className="landing-container landing-content">
+        <section>
+          <h2>Yang bisa Anda pantau</h2>
+          <p>Tiga hal yang paling sering ditanyakan keluarga, dari satu jam tangan.</p>
+          <div className="landing-features">
+            {features.map(({title,description,href}) => <article key={href}><h3>{title}</h3><p>{description}</p><Link href={href}>Lihat fitur <span aria-hidden="true">→</span><span className="sr-only"> {title}</span></Link></article>)}
+          </div>
+        </section>
+        <section className="landing-steps">
+          <h2>Dari sensor ke tindakan</h2>
+          <ol>{steps.map((step,i) => <li key={step}><img src="/ungu/brand.svg" alt="" /><h3>{['Pantau pembacaan','Pahami perubahan','Tinjau kejadian'][i]}</h3><p>{step}</p></li>)}</ol>
+        </section>
+      </div>
+      <footer className="landing-night"><div className="landing-container landing-header"><Link className="ungu-brand" href="/"><img src="/ungu/brand.svg" alt="" />JagSi</Link><span>Data simulasi · 2026</span></div></footer>
     </>
   );
 }

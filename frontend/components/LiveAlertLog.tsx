@@ -44,7 +44,7 @@ export function LiveAlertLog() {
 
   if (failed && rows === null) {
     return (
-      <section className="space-y-2">
+      <section id="log-kejadian" className="ungu-panel scroll-mt-28">
         <Header badge="Data demo" />
         <p className="text-[11px] text-on-surface-variant">
           Backend belum terhubung. Daftar di bawah adalah contoh, bukan peringatan dari perangkat.
@@ -60,7 +60,7 @@ export function LiveAlertLog() {
 
   if (rows === null) {
     return (
-      <section className="space-y-2">
+      <section id="log-kejadian" className="ungu-panel scroll-mt-28">
         <Header />
         <p className="text-xs text-on-surface-variant">Memuat…</p>
       </section>
@@ -68,7 +68,7 @@ export function LiveAlertLog() {
   }
 
   return (
-    <section className="space-y-2">
+    <section id="log-kejadian" className="ungu-panel scroll-mt-28">
       <Header />
       {rows.length === 0 ? (
         <p className="rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-4 text-center text-xs text-on-surface-variant">
@@ -94,7 +94,7 @@ export function LiveAlertLog() {
                       type="button"
                       disabled={pending}
                       onClick={() => void ctx.acknowledge(alert.alert_id)}
-                      className="mt-2 rounded-lg bg-error px-3 py-1.5 text-xs font-semibold text-on-error disabled:opacity-60"
+                      className="ungu-action mt-2 text-error"
                     >
                       {pending ? 'Mengirim…' : 'Saya tangani'}
                     </button>

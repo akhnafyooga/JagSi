@@ -12,19 +12,19 @@ const sensors = [
 export default function ProfilPage() {
   return (
     <>
-      <TopAppBar title="Profil & perangkat" subtitle={elder.name + " · Data contoh"} />
+      <TopAppBar title="Profil & perangkat" subtitle="Perangkat dan pengaturan perawatan · Data contoh" />
 
-      <div className="jagsi-panels">
+      <div className="ungu-dashboard">
         {/* Profile card */}
-        <section className="rounded-2xl border border-surface-container-highest/60 bg-surface-container-lowest p-4 shadow-sm">
+        <section className="ungu-heart">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
               <Icon name="person" className="text-[34px]" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-on-surface">{elder.fullName}</h2>
-              <p className="text-sm text-on-surface-variant">
-                {elder.age} tahun · {elder.gender}
+              <h2 className="jagsi-display text-3xl font-semibold">{elder.name}</h2>
+              <p className="text-sm">
+                Akun pendamping keluarga
               </p>
               <span className="mt-1 inline-block rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
                 {elder.condition}
@@ -34,17 +34,17 @@ export default function ProfilPage() {
           <dl className="mt-4 space-y-1.5 border-t border-surface-container-low pt-3 text-sm">
             <div className="flex justify-between">
               <dt className="text-on-surface-variant">Alamat</dt>
-              <dd className="text-on-surface">{elder.address}</dd>
+              <dd >{elder.address}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-on-surface-variant">Pengasuh utama</dt>
-              <dd className="text-on-surface">{elder.caregiver}</dd>
+              <dd >{elder.caregiver}</dd>
             </div>
           </dl>
         </section>
 
         {/* Sensor status */}
-        <section className="space-y-2">
+        <section className="ungu-panel">
           <h3 className="text-sm font-semibold text-on-surface">Status Sensor Smartwear</h3>
           <div className="space-y-2">
             {sensors.map((s) => (
@@ -68,7 +68,7 @@ export default function ProfilPage() {
         </section>
 
         {/* Medication schedule */}
-        <section className="space-y-2">
+        <section className="ungu-panel">
           <h3 className="text-sm font-semibold text-on-surface">Jadwal & Pengingat Obat</h3>
           <div className="space-y-2">
             {medications.map((m) => (
@@ -100,7 +100,7 @@ export default function ProfilPage() {
         </section>
 
         {/* Emergency contacts */}
-        <section className="space-y-2">
+        <section className="ungu-panel">
           <h3 className="text-sm font-semibold text-on-surface">Kontak Darurat Terhubung</h3>
           <div className="space-y-2">
             {emergencyContacts.map((c) => (
@@ -124,7 +124,7 @@ export default function ProfilPage() {
         </section>
 
         {/* Settings */}
-        <section className="space-y-2 pb-2">
+        <section className="ungu-panel pb-2">
           <h3 className="text-sm font-semibold text-on-surface">Pengaturan & Asisten AI</h3>
           <div className="rounded-xl border border-surface-container-highest/60 bg-surface-container-lowest px-3">
             {[

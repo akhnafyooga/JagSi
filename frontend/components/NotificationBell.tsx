@@ -20,7 +20,7 @@ export function NotificationBell() {
     <Link
       href="/darurat"
       aria-label={label}
-      className="relative flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container active:scale-95"
+      className="ungu-nav-pill relative h-11 w-11 shrink-0 justify-center !px-0 active:scale-95"
     >
       <Icon name={count > 0 ? 'notifications_active' : 'notifications'} filled={count > 0} className={cn('text-[24px]', count > 0 && 'text-error')} />
       {count > 0 ? (

@@ -54,7 +54,7 @@ from .realtime import ALERT_EVENTS, Hub
 from .recorder import SUGGESTED_LABELS, MotionRecorder, RecordingError
 from .store import Store, utcnow
 from .vitals import telemetry_to_vitals
-from demo.cloud import router as cloud_router
+from demo.cloud import WINDOW_ROWS, TrendConfig, TrendModelUnavailable, predict, router as cloud_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 log = logging.getLogger("jagsi.api")
@@ -118,6 +118,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/api/devices/{device_id}/local-progress")
+def local_progress(device_id: str) -> Dict[str, Any]:
+    if device_id != settings.device_id:
+        raise HTTPException(404, "Unknown device")
+    rows = store.telemetry_history(device_id, WINDOW_ROWS)
+    try:
+        return predict(rows, TrendConfig.from_env())
+    except TrendModelUnavailable as exc:
+        raise HTTPException(503, "Trend model unavailable") from exc
 
 
 @app.get("/api/health")
